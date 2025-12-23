@@ -1,0 +1,2752 @@
+# 🧠 ADVANCED AI RECOMMENDATION ENGINE
+## Sophisticated Football Tactical Intelligence System
+
+---
+
+## 🎯 OVERVIEW
+
+Ini adalah AI engine yang **MANTAP SEKALI** dengan:
+- Multi-factor decision making dengan weighted scoring
+- Context-aware recommendations
+- Dynamic tactical analysis
+- Pattern recognition untuk team chemistry
+- Adaptive strategy generation
+- Real coaching intelligence
+
+---
+
+## 📊 PART 1: CORE SCORING SYSTEM
+
+### 1.1 Player Position Suitability Score (0-100)
+
+```typescript
+interface PositionSuitability {
+  primary: number;    // Main position: 100 points
+  secondary: number;  // Compatible position: 70 points
+  tertiary: number;   // Can play but not ideal: 40 points
+  unsuitable: number; // Wrong position: 0 points
+}
+
+const positionCompatibility = {
+  GK: {
+    primary: ['GK'],
+    secondary: [],
+    tertiary: [],
+  },
+  CB: {
+    primary: ['CB'],
+    secondary: ['DMF'], // CB yang bisa drop jadi DMF
+    tertiary: ['RB', 'LB'], // Emergency option
+  },
+  RB: {
+    primary: ['RB'],
+    secondary: ['RWB', 'CB', 'RMF'],
+    tertiary: ['DMF'],
+  },
+  LB: {
+    primary: ['LB'],
+    secondary: ['LWB', 'CB', 'LMF'],
+    tertiary: ['DMF'],
+  },
+  DMF: {
+    primary: ['DMF'],
+    secondary: ['CMF', 'CB'],
+    tertiary: ['AMF'],
+  },
+  CMF: {
+    primary: ['CMF'],
+    secondary: ['DMF', 'AMF', 'LMF', 'RMF'],
+    tertiary: ['LB', 'RB'],
+  },
+  AMF: {
+    primary: ['AMF'],
+    secondary: ['CMF', 'LWF', 'RWF', 'SS'],
+    tertiary: ['CF', 'DMF'],
+  },
+  LWF: {
+    primary: ['LWF'],
+    secondary: ['LMF', 'AMF', 'SS'],
+    tertiary: ['CF', 'LB'],
+  },
+  RWF: {
+    primary: ['RWF'],
+    secondary: ['RMF', 'AMF', 'SS'],
+    tertiary: ['CF', 'RB'],
+  },
+  CF: {
+    primary: ['CF'],
+    secondary: ['SS', 'AMF'],
+    tertiary: ['LWF', 'RWF'],
+  },
+  SS: {
+    primary: ['SS'],
+    secondary: ['CF', 'AMF', 'LWF', 'RWF'],
+    tertiary: ['CMF'],
+  }
+};
+```
+
+### 1.2 Playing Style Compatibility Matrix (0-100)
+
+Setiap playing style punya chemistry score dengan posisi dan formasi:
+
+```typescript
+interface StyleCompatibility {
+  position: string;
+  formation: string;
+  role: string;
+  baseScore: number; // 0-100
+  synergy: string[]; // Playing styles yang cocok di posisi lain
+  antiSynergy: string[]; // Playing styles yang bentrok
+}
+
+const playingStyleMatrix = {
+  // GOALKEEPER STYLES
+  'Offensive Goalkeeper': {
+    formations: {
+      '4-3-3': 95,  // Sangat cocok untuk possession-based
+      '3-4-3': 90,
+      '4-2-3-1': 85,
+      '5-3-2': 60,  // Kurang cocok untuk defensive setup
+      '4-4-2': 75,
+    },
+    synergyWith: ['Build Up', 'Orchestrator', 'Extra Frontman'],
+    antiSynergyWith: ['Defensive Fullback', 'Anchor Man'], // Konflik style
+    tacticalNote: 'Sweeper keeper, cocok untuk high defensive line',
+  },
+  
+  'Defensive Goalkeeper': {
+    formations: {
+      '5-3-2': 95,  // Sangat cocok untuk deep defense
+      '4-4-2': 85,
+      '4-5-1': 90,
+      '4-3-3': 70,  // Kurang optimal untuk attacking play
+    },
+    synergyWith: ['Destroyer', 'Anchor Man', 'Defensive Fullback'],
+    antiSynergyWith: ['Extra Frontman', 'Offensive Fullback'],
+    tacticalNote: 'Traditional keeper, stays on line',
+  },
+
+  // DEFENDER STYLES
+  'Extra Frontman': {
+    formations: {
+      '3-5-2': 95,  // CB bisa join attack
+      '3-4-3': 90,
+      '4-3-3': 85,
+      '5-3-2': 50,  // Terlalu defensive
+    },
+    synergyWith: ['Offensive Goalkeeper', 'Orchestrator', 'Target Man'],
+    antiSynergyWith: ['Defensive Fullback', 'Anchor Man'],
+    idealOVR: 75, // Minimum OVR untuk efektif
+    tacticalNote: 'Joins attack on set pieces and build-up',
+  },
+
+  'Build Up': {
+    formations: {
+      '4-3-3': 95,
+      '4-2-3-1': 90,
+      '3-4-3': 85,
+      '4-4-2': 80,
+    },
+    synergyWith: ['Offensive Goalkeeper', 'Orchestrator', 'Creative Playmaker'],
+    antiSynergyWith: ['Long Ball', 'Target Man'],
+    idealOVR: 70,
+    tacticalNote: 'Ball-playing defender, initiates attacks',
+  },
+
+  'Destroyer': {
+    formations: {
+      '5-3-2': 95,
+      '4-4-2': 90,
+      '4-5-1': 95,
+      '4-3-3': 75,
+    },
+    synergyWith: ['Anchor Man', 'Defensive Fullback', 'Poacher'],
+    antiSynergyWith: ['Extra Frontman', 'Offensive Fullback'],
+    idealOVR: 72,
+    tacticalNote: 'Aggressive defending, wins duels',
+  },
+
+  // FULLBACK STYLES
+  'Offensive Fullback': {
+    formations: {
+      '4-3-3': 95,
+      '3-5-2': 90,  // Sebagai wing-back
+      '4-2-3-1': 85,
+      '5-3-2': 40,  // Tidak cocok
+    },
+    synergyWith: ['Orchestrator', 'Prolific Winger', 'Anchor Man'],
+    antiSynergyWith: ['Defensive Fullback', 'Destroyer'], // Both fullbacks defensive = no width
+    pairsWith: {
+      oppositeSide: 'Defensive Fullback', // Balance needed
+      sameSide: 'Prolific Winger', // Overlap coordination
+    },
+    tacticalNote: 'Provides width, overlapping runs',
+  },
+
+  'Defensive Fullback': {
+    formations: {
+      '5-3-2': 90,
+      '4-4-2': 85,
+      '4-5-1': 90,
+      '4-3-3': 70,
+    },
+    synergyWith: ['Anchor Man', 'Destroyer', 'Box-to-Box'],
+    antiSynergyWith: ['Offensive Fullback'], // Butuh balance
+    pairsWith: {
+      oppositeSide: 'Offensive Fullback', // Need one attacking fullback
+    },
+    tacticalNote: 'Stays back, defensive solidity',
+  },
+
+  'Roaming Flank': {
+    formations: {
+      '3-5-2': 95,
+      '3-4-3': 90,
+      '4-3-3': 80,
+    },
+    synergyWith: ['Box-to-Box', 'Hole Player', 'Creative Playmaker'],
+    antiSynergyWith: ['Anchor Man'],
+    tacticalNote: 'Versatile, roams into midfield',
+  },
+
+  // MIDFIELDER STYLES
+  'Anchor Man': {
+    formations: {
+      '4-3-3': 95,
+      '4-2-3-1': 90,
+      '4-4-2': 85,
+      '3-5-2': 80,
+    },
+    synergyWith: ['Offensive Fullback', 'Hole Player', 'Prolific Winger'],
+    antiSynergyWith: ['Destroyer', 'Defensive Fullback'], // Too defensive
+    requiredFor: ['attacking_formations'],
+    tacticalNote: 'Defensive anchor, shields back four',
+  },
+
+  'Orchestrator': {
+    formations: {
+      '4-3-3': 95,
+      '4-2-3-1': 90,
+      '3-4-3': 85,
+      '4-4-2': 80,
+    },
+    synergyWith: ['Build Up', 'Offensive Goalkeeper', 'Creative Playmaker'],
+    antiSynergyWith: ['Long Ball', 'Target Man'],
+    idealOVR: 72,
+    tacticalNote: 'Deep-lying playmaker, dictates tempo',
+  },
+
+  'Box-to-Box': {
+    formations: {
+      '4-3-3': 90,
+      '4-4-2': 95,
+      '3-5-2': 90,
+      '4-2-3-1': 85,
+    },
+    synergyWith: ['Anchor Man', 'Prolific Winger', 'Poacher'],
+    antiSynergyWith: [], // Universal style
+    idealOVR: 70,
+    tacticalNote: 'High work rate, covers ground',
+  },
+
+  'Hole Player': {
+    formations: {
+      '4-2-3-1': 95,
+      '4-3-3': 90,
+      '3-4-3': 85,
+    },
+    synergyWith: ['Anchor Man', 'Poacher', 'Fox In The Box'],
+    antiSynergyWith: ['Classic No. 10'], // Both want same space
+    idealOVR: 72,
+    tacticalNote: 'Late runs into box, off-ball movement',
+  },
+
+  'Classic No. 10': {
+    formations: {
+      '4-2-3-1': 95,
+      '4-4-2': 85,
+      '3-5-2': 80,
+    },
+    synergyWith: ['Anchor Man', 'Target Man', 'Advanced Striker'],
+    antiSynergyWith: ['Hole Player', 'Creative Playmaker'],
+    idealOVR: 75,
+    tacticalNote: 'Traditional playmaker, operates in space',
+  },
+
+  'Creative Playmaker': {
+    formations: {
+      '4-3-3': 95,
+      '4-2-3-1': 90,
+      '3-4-3': 85,
+    },
+    synergyWith: ['Prolific Winger', 'Advanced Striker', 'Orchestrator'],
+    antiSynergyWith: ['Classic No. 10'],
+    idealOVR: 73,
+    tacticalNote: 'Creates chances, vision and passing',
+  },
+
+  // WINGER STYLES
+  'Prolific Winger': {
+    formations: {
+      '4-3-3': 100, // Perfect fit
+      '4-2-3-1': 90,
+      '3-4-3': 95,
+      '4-4-2': 70,  // No natural winger positions
+    },
+    synergyWith: ['Offensive Fullback', 'Anchor Man', 'Poacher'],
+    antiSynergyWith: ['Target Man'], // Different attacking style
+    idealOVR: 74,
+    tacticalNote: 'Cuts inside, scores goals',
+  },
+
+  // STRIKER STYLES
+  'Poacher': {
+    formations: {
+      '4-3-3': 95,
+      '4-2-3-1': 90,
+      '4-4-2': 85,
+    },
+    synergyWith: ['Prolific Winger', 'Creative Playmaker', 'Hole Player'],
+    antiSynergyWith: ['Target Man'], // Need service, not physical play
+    idealOVR: 70,
+    tacticalNote: 'Penalty box predator, instinctive finishing',
+  },
+
+  'Fox In The Box': {
+    formations: {
+      '4-3-3': 90,
+      '4-4-2': 95,
+      '3-5-2': 85,
+    },
+    synergyWith: ['Box-to-Box', 'Creative Playmaker', 'Offensive Fullback'],
+    antiSynergyWith: ['Poacher'], // Too similar
+    idealOVR: 72,
+    tacticalNote: 'Clinical finisher in tight spaces',
+  },
+
+  'Advanced Striker': {
+    formations: {
+      '4-2-3-1': 95,
+      '4-3-3': 85,
+      '3-5-2': 80,
+    },
+    synergyWith: ['Classic No. 10', 'Hole Player', 'Box-to-Box'],
+    antiSynergyWith: ['Target Man'],
+    idealOVR: 72,
+    tacticalNote: 'Mobile striker, drops deep',
+  },
+
+  'Target Man': {
+    formations: {
+      '4-4-2': 95,
+      '5-3-2': 90,
+      '4-5-1': 85,
+    },
+    synergyWith: ['Classic No. 10', 'Box-to-Box', 'Destroyer'],
+    antiSynergyWith: ['Prolific Winger', 'Poacher'],
+    idealOVR: 75,
+    minimumHeight: 185, // Physical requirement
+    tacticalNote: 'Physical presence, hold-up play',
+  },
+};
+```
+
+### 1.3 Age Factor Scoring
+
+```typescript
+function calculateAgeScore(age: number, position: string): number {
+  const ageCurves = {
+    GK: {
+      peak: [22, 32],    // GK mature later
+      acceptable: [18, 38],
+      decline: 35,
+    },
+    defender: {
+      peak: [20, 30],
+      acceptable: [17, 35],
+      decline: 32,
+    },
+    midfielder: {
+      peak: [19, 29],
+      acceptable: [17, 34],
+      decline: 31,
+    },
+    attacker: {
+      peak: [18, 28],
+      acceptable: [16, 33],
+      decline: 30,
+    }
+  };
+
+  const curve = ageCurves[getPositionType(position)];
+  
+  if (age >= curve.peak[0] && age <= curve.peak[1]) {
+    return 100; // Peak years
+  }
+  
+  if (age < curve.peak[0]) {
+    // Young prospect bonus
+    const potential = (curve.peak[0] - age) * 5;
+    return 85 + Math.min(potential, 15); // Max 100
+  }
+  
+  if (age > curve.peak[1] && age < curve.decline) {
+    // Still good but declining
+    const decline = (age - curve.peak[1]) * 5;
+    return 100 - decline;
+  }
+  
+  if (age >= curve.decline) {
+    // Rapid decline
+    const decline = (age - curve.decline) * 10;
+    return Math.max(50 - decline, 20); // Minimum 20
+  }
+  
+  return 70; // Fallback
+}
+```
+
+---
+
+## 🎲 PART 2: FORMATION SELECTION ALGORITHM
+
+### 2.1 Squad Analysis
+
+```typescript
+interface SquadAnalysis {
+  strengths: {
+    wings: number;      // Quality of wingers (0-100)
+    center: number;     // Quality of central players
+    defense: number;    // Defensive solidity
+    attack: number;     // Attacking prowess
+    physicality: number; // Physical presence
+    technique: number;  // Technical ability
+  };
+  characteristics: {
+    avgAge: number;
+    avgOVR: number;
+    topPlayer: Player;
+    weakestPosition: string;
+    playingStyleDistribution: Record<string, number>;
+  };
+  recommendations: {
+    formations: Formation[];
+    tacticalApproach: string;
+    keyPlayers: Player[];
+  };
+}
+
+function analyzeSquad(players: Player[]): SquadAnalysis {
+  // 1. Calculate positional strength
+  const wingers = players.filter(p => ['LWF', 'RWF'].includes(p.position));
+  const wingStrength = calculateAverageOVR(wingers);
+  
+  const strikers = players.filter(p => ['CF', 'SS'].includes(p.position));
+  const strikerStrength = calculateAverageOVR(strikers);
+  
+  const defenders = players.filter(p => ['CB', 'RB', 'LB'].includes(p.position));
+  const defenseStrength = calculateAverageOVR(defenders);
+  
+  const midfielders = players.filter(p => ['DMF', 'CMF', 'AMF'].includes(p.position));
+  const midfieldStrength = calculateAverageOVR(midfielders);
+  
+  // 2. Analyze playing style distribution
+  const styleCount = {};
+  players.forEach(p => {
+    styleCount[p.playingStyle] = (styleCount[p.playingStyle] || 0) + 1;
+  });
+  
+  // 3. Identify tactical identity
+  const tacticalIdentity = identifyTacticalDNA(
+    wingStrength,
+    strikerStrength,
+    defenseStrength,
+    midfieldStrength,
+    styleCount
+  );
+  
+  return {
+    strengths: {
+      wings: wingStrength,
+      center: (strikerStrength + midfieldStrength) / 2,
+      defense: defenseStrength,
+      attack: (wingStrength + strikerStrength) / 2,
+      physicality: calculatePhysicality(players),
+      technique: calculateTechnique(players),
+    },
+    characteristics: {
+      avgAge: players.reduce((sum, p) => sum + p.age, 0) / players.length,
+      avgOVR: players.reduce((sum, p) => sum + p.ovr, 0) / players.length,
+      topPlayer: players.sort((a, b) => b.ovr - a.ovr)[0],
+      weakestPosition: findWeakestPosition(players),
+      playingStyleDistribution: styleCount,
+    },
+    recommendations: generateFormationRecommendations(tacticalIdentity),
+  };
+}
+```
+
+### 2.2 Formation Matching Score
+
+```typescript
+function calculateFormationScore(
+  formation: Formation,
+  squad: Player[],
+  analysis: SquadAnalysis
+): number {
+  let score = 0;
+  
+  // 1. Positional coverage (30%)
+  const coverageScore = calculatePositionCoverage(formation, squad);
+  score += coverageScore * 0.3;
+  
+  // 2. Playing style synergy (25%)
+  const synergyScore = calculateTeamSynergy(formation, squad);
+  score += synergyScore * 0.25;
+  
+  // 3. Tactical fit (25%)
+  const tacticalScore = calculateTacticalFit(formation, analysis);
+  score += tacticalScore * 0.25;
+  
+  // 4. Player quality utilization (20%)
+  const qualityScore = calculateQualityUtilization(formation, squad);
+  score += qualityScore * 0.2;
+  
+  return score;
+}
+
+function calculateTeamSynergy(formation: Formation, squad: Player[]): number {
+  let totalSynergy = 0;
+  let pairCount = 0;
+  
+  // Check synergy between connected positions
+  const connections = {
+    'RB-RWF': ['wing_coordination'],
+    'LB-LWF': ['wing_coordination'],
+    'DMF-CB': ['defensive_shield'],
+    'AMF-CF': ['attacking_link'],
+    'CB-CB': ['defensive_partnership'],
+    'CMF-CMF': ['midfield_balance'],
+  };
+  
+  for (const [pair, synergyTypes] of Object.entries(connections)) {
+    const [pos1, pos2] = pair.split('-');
+    const player1 = squad.find(p => p.position === pos1);
+    const player2 = squad.find(p => p.position === pos2);
+    
+    if (player1 && player2) {
+      const synergy = calculatePairSynergy(player1, player2, synergyTypes);
+      totalSynergy += synergy;
+      pairCount++;
+    }
+  }
+  
+  return pairCount > 0 ? totalSynergy / pairCount : 50;
+}
+
+function calculatePairSynergy(
+  player1: Player,
+  player2: Player,
+  synergyTypes: string[]
+): number {
+  const style1 = playingStyleMatrix[player1.playingStyle];
+  const style2 = playingStyleMatrix[player2.playingStyle];
+  
+  // Check if styles have synergy
+  if (style1.synergyWith.includes(player2.playingStyle)) {
+    return 90;
+  }
+  
+  // Check if styles have anti-synergy
+  if (style1.antiSynergyWith.includes(player2.playingStyle)) {
+    return 30;
+  }
+  
+  // Neutral compatibility
+  return 60;
+}
+```
+
+---
+
+## ⚡ PART 3: INTELLIGENT STARTING XI SELECTION
+
+### 3.1 Multi-Factor Weighted Scoring
+
+```typescript
+interface PlayerScore {
+  player: Player;
+  position: string;
+  totalScore: number;
+  breakdown: {
+    positionSuitability: number;
+    ovrRating: number;
+    playingStyleFit: number;
+    ageOptimization: number;
+    chemistryBonus: number;
+    formationSynergy: number;
+  };
+}
+
+function selectStartingXI(
+  squad: Player[],
+  formation: Formation,
+  analysis: SquadAnalysis
+): Player[] {
+  const startingXI: Player[] = [];
+  const availablePlayers = [...squad];
+  
+  // Phase 1: Select GK (easiest decision)
+  const gk = selectGoalkeeper(availablePlayers, formation);
+  startingXI.push(gk);
+  removePlayer(availablePlayers, gk);
+  
+  // Phase 2: Select Defense (foundation)
+  const defenders = selectDefensiveLine(availablePlayers, formation, analysis);
+  startingXI.push(...defenders);
+  defenders.forEach(d => removePlayer(availablePlayers, d));
+  
+  // Phase 3: Select Midfield (engine room)
+  const midfielders = selectMidfield(availablePlayers, formation, startingXI);
+  startingXI.push(...midfielders);
+  midfielders.forEach(m => removePlayer(availablePlayers, m));
+  
+  // Phase 4: Select Attack (finishers)
+  const attackers = selectAttack(availablePlayers, formation, startingXI);
+  startingXI.push(...attackers);
+  
+  // Phase 5: Optimize chemistry and final adjustments
+  optimizeLineup(startingXI, formation);
+  
+  return startingXI;
+}
+
+function scorePlayerForPosition(
+  player: Player,
+  position: string,
+  formation: Formation,
+  currentLineup: Player[],
+  analysis: SquadAnalysis
+): PlayerScore {
+  const weights = {
+    positionSuitability: 0.25,
+    ovrRating: 0.25,
+    playingStyleFit: 0.20,
+    ageOptimization: 0.10,
+    chemistryBonus: 0.15,
+    formationSynergy: 0.05,
+  };
+  
+  // 1. Position Suitability (25%)
+  const positionScore = calculatePositionSuitability(player, position);
+  
+  // 2. OVR Rating (25%) - Normalized to 0-100
+  const ovrScore = normalizeOVR(player.ovr);
+  
+  // 3. Playing Style Fit (20%)
+  const styleScore = calculateStyleFit(player, position, formation);
+  
+  // 4. Age Optimization (10%)
+  const ageScore = calculateAgeScore(player.age, position);
+  
+  // 5. Chemistry Bonus (15%)
+  const chemistryScore = calculateChemistryWithLineup(
+    player,
+    position,
+    currentLineup,
+    formation
+  );
+  
+  // 6. Formation Synergy (5%)
+  const synergyScore = playingStyleMatrix[player.playingStyle]
+    .formations[formation.name] || 50;
+  
+  const totalScore = 
+    positionScore * weights.positionSuitability +
+    ovrScore * weights.ovrRating +
+    styleScore * weights.playingStyleFit +
+    ageScore * weights.ageOptimization +
+    chemistryScore * weights.chemistryBonus +
+    synergyScore * weights.formationSynergy;
+  
+  return {
+    player,
+    position,
+    totalScore,
+    breakdown: {
+      positionSuitability: positionScore,
+      ovrRating: ovrScore,
+      playingStyleFit: styleScore,
+      ageOptimization: ageScore,
+      chemistryBonus: chemistryScore,
+      formationSynergy: synergyScore,
+    },
+  };
+}
+
+function calculateChemistryWithLineup(
+  player: Player,
+  position: string,
+  currentLineup: Player[],
+  formation: Formation
+): number {
+  if (currentLineup.length === 0) return 70; // Baseline
+  
+  let chemistryScore = 0;
+  let connections = 0;
+  
+  // Find adjacent positions based on formation
+  const adjacentPositions = getAdjacentPositions(position, formation);
+  
+  for (const adjPos of adjacentPositions) {
+    const adjacentPlayer = currentLineup.find(p => 
+      getPlayerPosition(p, formation) === adjPos
+    );
+    
+    if (adjacentPlayer) {
+      const pairScore = calculatePairSynergy(
+        player,
+        adjacentPlayer,
+        ['positional_link']
+      );
+      chemistryScore += pairScore;
+      connections++;
+    }
+  }
+  
+  return connections > 0 ? chemistryScore / connections : 70;
+}
+```
+
+### 3.2 Context-Aware Selection
+
+```typescript
+function selectDefensiveLine(
+  availablePlayers: Player[],
+  formation: Formation,
+  analysis: SquadAnalysis
+): Player[] {
+  const defenseLine: Player[] = [];
+  
+  // Special logic for 3-back vs 4-back
+  if (formation.defenders === 3) {
+    return select3ManDefense(availablePlayers, formation);
+  } else if (formation.defenders === 4) {
+    return select4ManDefense(availablePlayers, formation, analysis);
+  } else if (formation.defenders === 5) {
+    return select5ManDefense(availablePlayers, formation);
+  }
+  
+  return defenseLine;
+}
+
+function select4ManDefense(
+  players: Player[],
+  formation: Formation,
+  analysis: SquadAnalysis
+): Player[] {
+  const defenseLine: Player[] = [];
+  
+  // STEP 1: Select Center Backs (most important)
+  const cbCandidates = players
+    .filter(p => ['CB', 'DMF'].includes(p.position))
+    .map(p => scorePlayerForPosition(p, 'CB', formation, [], analysis))
+    .sort((a, b) => b.totalScore - a.totalScore);
+  
+  // Select best 2 CBs
+  const cb1 = cbCandidates[0].player;
+  defenseLine.push(cb1);
+  
+  // Select CB2 with complementary style
+  const cb2 = selectComplementaryCB(cb1, cbCandidates.slice(1));
+  defenseLine.push(cb2);
+  
+  // STEP 2: Select Fullbacks with balance consideration
+  const fullbackBalance = determineFullbackBalance(analysis);
+  
+  // Right Back
+  const rbCandidates = players
+    .filter(p => !defenseLine.includes(p))
+    .filter(p => ['RB', 'CB', 'RWB'].includes(p.position))
+    .map(p => scorePlayerForPosition(p, 'RB', formation, defenseLine, analysis))
+    .sort((a, b) => b.totalScore - a.totalScore);
+  
+  const rb = selectFullbackByBalance(rbCandidates, fullbackBalance.right);
+  defenseLine.push(rb);
+  
+  // Left Back
+  const lbCandidates = players
+    .filter(p => !defenseLine.includes(p))
+    .filter(p => ['LB', 'CB', 'LWB'].includes(p.position))
+    .map(p => scorePlayerForPosition(p, 'LB', formation, defenseLine, analysis))
+    .sort((a, b) => b.totalScore - a.totalScore);
+  
+  const lb = selectFullbackByBalance(lbCandidates, fullbackBalance.left, rb);
+  defenseLine.push(lb);
+  
+  return defenseLine;
+}
+
+function selectComplementaryCB(
+  firstCB: Player,
+  candidates: PlayerScore[]
+): Player {
+  const firstStyle = firstCB.playingStyle;
+  
+  // Ideal CB partnerships
+  const idealPairs = {
+    'Extra Frontman': ['Build Up', 'Destroyer'],
+    'Build Up': ['Extra Frontman', 'Destroyer'],
+    'Destroyer': ['Build Up', 'Extra Frontman'],
+  };
+  
+  const preferredStyles = idealPairs[firstStyle] || [];
+  
+  // Find CB with complementary style
+  for (const style of preferredStyles) {
+    const match = candidates.find(c => c.player.playingStyle === style);
+    if (match && match.totalScore >= 70) {
+      return match.player;
+    }
+  }
+  
+  // If no ideal pair, take best available
+  return candidates[0].player;
+}
+
+function determineFullbackBalance(analysis: SquadAnalysis): {
+  right: 'offensive' | 'defensive' | 'balanced';
+  left: 'offensive' | 'defensive' | 'balanced';
+} {
+  const { wings, defense } = analysis.strengths;
+  
+  // If strong wingers, fullbacks can be defensive
+  if (wings >= 75) {
+    return { right: 'defensive', left: 'defensive' };
+  }
+  
+  // If weak wingers, fullbacks must provide width
+  if (wings < 65) {
+    return { right: 'offensive', left: 'offensive' };
+  }
+  
+  // Balanced: one attacking,
+function determineFullbackBalance(analysis: SquadAnalysis): {
+  right: 'offensive' | 'defensive' | 'balanced';
+  left: 'offensive' | 'defensive' | 'balanced';
+} {
+  const { wings, defense, attack } = analysis.strengths;
+  
+  // If strong wingers, fullbacks can be defensive
+  if (wings >= 75) {
+    return { right: 'defensive', left: 'defensive' };
+  }
+  
+  // If weak wingers, fullbacks must provide width
+  if (wings < 65) {
+    return { right: 'offensive', left: 'offensive' };
+  }
+  
+  // Balanced: one attacking, one defensive
+  return { right: 'offensive', left: 'defensive' };
+}
+
+function selectFullbackByBalance(
+  candidates: PlayerScore[],
+  preferredStyle: 'offensive' | 'defensive' | 'balanced',
+  oppositeFullback?: Player
+): Player {
+  // If we need balance and opposite fullback is offensive, select defensive
+  if (oppositeFullback) {
+    const oppositeStyle = oppositeFullback.playingStyle;
+    if (oppositeStyle === 'Offensive Fullback') {
+      const defensive = candidates.find(c => 
+        c.player.playingStyle === 'Defensive Fullback' && c.totalScore >= 70
+      );
+      if (defensive) return defensive.player;
+    }
+  }
+  
+  // Try to match preferred style
+  const styleMap = {
+    offensive: ['Offensive Fullback', 'Roaming Flank'],
+    defensive: ['Defensive Fullback'],
+    balanced: ['Roaming Flank'],
+  };
+  
+  const preferredStyles = styleMap[preferredStyle];
+  for (const style of preferredStyles) {
+    const match = candidates.find(c => c.player.playingStyle === style);
+    if (match && match.totalScore >= 70) {
+      return match.player;
+    }
+  }
+  
+  // Fallback: best available
+  return candidates[0].player;
+}
+
+3.3 Midfield Selection Logic
+function selectMidfield(
+  availablePlayers: Player[],
+  formation: Formation,
+  currentLineup: Player[]
+): Player[] {
+  const midfield: Player[] = [];
+  const midfieldPositions = getFormationMidfieldPositions(formation);
+  
+  // PRIORITY 1: Defensive Midfielder (if formation requires)
+  if (midfieldPositions.includes('DMF')) {
+    const dmf = selectDefensiveMidfielder(availablePlayers, formation, currentLineup);
+    if (dmf) {
+      midfield.push(dmf);
+      removePlayer(availablePlayers, dmf);
+    }
+  }
+  
+  // PRIORITY 2: Central Midfielders (engine room)
+  const cmfCount = midfieldPositions.filter(p => p === 'CMF').length;
+  for (let i = 0; i < cmfCount; i++) {
+    const cmf = selectCentralMidfielder(
+      availablePlayers,
+      formation,
+      [...currentLineup, ...midfield],
+      i
+    );
+    if (cmf) {
+      midfield.push(cmf);
+      removePlayer(availablePlayers, cmf);
+    }
+  }
+  
+  // PRIORITY 3: Attacking Midfielder (if formation requires)
+  if (midfieldPositions.includes('AMF')) {
+    const amf = selectAttackingMidfielder(
+      availablePlayers,
+      formation,
+      [...currentLineup, ...midfield]
+    );
+    if (amf) {
+      midfield.push(amf);
+      removePlayer(availablePlayers, amf);
+    }
+  }
+  
+  // PRIORITY 4: Wide Midfielders (if formation requires)
+  if (midfieldPositions.includes('LMF')) {
+    const lmf = selectWideMidfielder(
+      availablePlayers,
+      'LMF',
+      formation,
+      [...currentLineup, ...midfield]
+    );
+    if (lmf) {
+      midfield.push(lmf);
+      removePlayer(availablePlayers, lmf);
+    }
+  }
+  
+  if (midfieldPositions.includes('RMF')) {
+    const rmf = selectWideMidfielder(
+      availablePlayers,
+      'RMF',
+      formation,
+      [...currentLineup, ...midfield]
+    );
+    if (rmf) {
+      midfield.push(rmf);
+      removePlayer(availablePlayers, rmf);
+    }
+  }
+  
+  return midfield;
+}
+
+function selectDefensiveMidfielder(
+  players: Player[],
+  formation: Formation,
+  currentLineup: Player[]
+): Player | null {
+  const candidates = players
+    .filter(p => ['DMF', 'CMF', 'CB'].includes(p.position))
+    .map(p => scorePlayerForPosition(p, 'DMF', formation, currentLineup, null))
+    .sort((a, b) => b.totalScore - a.totalScore);
+  
+  // Prefer Anchor Man or Orchestrator for DMF
+  const idealStyles = ['Anchor Man', 'Orchestrator', 'Box-to-Box'];
+  
+  for (const style of idealStyles) {
+    const match = candidates.find(c => 
+      c.player.playingStyle === style && c.totalScore >= 70
+    );
+    if (match) return match.player;
+  }
+  
+  return candidates[0]?.player || null;
+}
+
+function selectCentralMidfielder(
+  players: Player[],
+  formation: Formation,
+  currentLineup: Player[],
+  index: number
+): Player | null {
+  const candidates = players
+    .filter(p => ['CMF', 'DMF', 'AMF'].includes(p.position))
+    .map(p => scorePlayerForPosition(p, 'CMF', formation, currentLineup, null))
+    .sort((a, b) => b.totalScore - a.totalScore);
+  
+  // If first CMF, look for Box-to-Box or Orchestrator
+  if (index === 0) {
+    const idealFirst = candidates.find(c => 
+      ['Box-to-Box', 'Orchestrator'].includes(c.player.playingStyle) &&
+      c.totalScore >= 70
+    );
+    if (idealFirst) return idealFirst.player;
+  }
+  
+  // If second CMF, ensure balance with first
+  if (index === 1) {
+    const firstCMF = currentLineup.find(p => p.position === 'CMF');
+    if (firstCMF) {
+      return selectComplementaryCMF(firstCMF, candidates);
+    }
+  }
+  
+  return candidates[0]?.player || null;
+}
+
+function selectComplementaryCMF(
+  firstCMF: Player,
+  candidates: PlayerScore[]
+): Player {
+  const firstStyle = firstCMF.playingStyle;
+  
+  // Ideal CMF partnerships
+  const complementaryPairs = {
+    'Orchestrator': ['Box-to-Box', 'Hole Player'],
+    'Box-to-Box': ['Orchestrator', 'Anchor Man', 'Creative Playmaker'],
+    'Anchor Man': ['Box-to-Box', 'Hole Player'],
+    'Hole Player': ['Anchor Man', 'Orchestrator'],
+  };
+  
+  const preferred = complementaryPairs[firstStyle] || [];
+  
+  for (const style of preferred) {
+    const match = candidates.find(c => c.player.playingStyle === style);
+    if (match && match.totalScore >= 70) {
+      return match.player;
+    }
+  }
+  
+  return candidates[0].player;
+}
+
+function selectAttackingMidfielder(
+  players: Player[],
+  formation: Formation,
+  currentLineup: Player[]
+): Player | null {
+  const candidates = players
+    .filter(p => ['AMF', 'CMF', 'SS', 'LWF', 'RWF'].includes(p.position))
+    .map(p => scorePlayerForPosition(p, 'AMF', formation, currentLineup, null))
+    .sort((a, b) => b.totalScore - a.totalScore);
+  
+  // Prefer creative players for AMF
+  const idealStyles = [
+    'Classic No. 10',
+    'Creative Playmaker',
+    'Hole Player',
+  ];
+  
+  for (const style of idealStyles) {
+    const match = candidates.find(c => 
+      c.player.playingStyle === style && c.totalScore >= 70
+    );
+    if (match) return match.player;
+  }
+  
+  return candidates[0]?.player || null;
+}
+
+function selectWideMidfielder(
+  players: Player[],
+  position: 'LMF' | 'RMF',
+  formation: Formation,
+  currentLineup: Player[]
+): Player | null {
+  const side = position === 'LMF' ? 'L' : 'R';
+  const wingPosition = side === 'L' ? 'LWF' : 'RWF';
+  const fullbackPosition = side === 'L' ? 'LB' : 'RB';
+  
+  const candidates = players
+    .filter(p => [position, wingPosition, 'CMF', fullbackPosition].includes(p.position))
+    .map(p => scorePlayerForPosition(p, position, formation, currentLineup, null))
+    .sort((a, b) => b.totalScore - a.totalScore);
+  
+  return candidates[0]?.player || null;
+}
+
+3.4 Attack Selection Logic
+function selectAttack(
+  availablePlayers: Player[],
+  formation: Formation,
+  currentLineup: Player[]
+): Player[] {
+  const attack: Player[] = [];
+  const attackPositions = getFormationAttackPositions(formation);
+  
+  // PRIORITY 1: Wingers (if formation uses them)
+  if (attackPositions.includes('LWF')) {
+    const lwf = selectWinger(availablePlayers, 'LWF', formation, currentLineup);
+    if (lwf) {
+      attack.push(lwf);
+      removePlayer(availablePlayers, lwf);
+    }
+  }
+  
+  if (attackPositions.includes('RWF')) {
+    const rwf = selectWinger(availablePlayers, 'RWF', formation, currentLineup);
+    if (rwf) {
+      attack.push(rwf);
+      removePlayer(availablePlayers, rwf);
+    }
+  }
+  
+  // PRIORITY 2: Strikers
+  const strikerPositions = attackPositions.filter(p => ['CF', 'SS'].includes(p));
+  
+  if (strikerPositions.length === 1) {
+    // Single striker formation
+    const st = selectLoneStriker(
+      availablePlayers,
+      formation,
+      [...currentLineup, ...attack]
+    );
+    if (st) attack.push(st);
+  } else if (strikerPositions.length === 2) {
+    // Two striker formation
+    const strikers = selectStrikerPair(
+      availablePlayers,
+      formation,
+      [...currentLineup, ...attack]
+    );
+    attack.push(...strikers);
+  }
+  
+  return attack;
+}
+
+function selectWinger(
+  players: Player[],
+  position: 'LWF' | 'RWF',
+  formation: Formation,
+  currentLineup: Player[]
+): Player | null {
+  const side = position === 'LWF' ? 'L' : 'R';
+  const midfieldPosition = side === 'L' ? 'LMF' : 'RMF';
+  
+  const candidates = players
+    .filter(p => [position, midfieldPosition, 'AMF', 'SS'].includes(p.position))
+    .map(p => scorePlayerForPosition(p, position, formation, currentLineup, null))
+    .sort((a, b) => b.totalScore - a.totalScore);
+  
+  // Check if opposite fullback is offensive
+  const oppositeFullback = currentLineup.find(p => {
+    const oppositeSide = side === 'L' ? 'RB' : 'LB';
+    return p.position === oppositeSide;
+  });
+  
+  // If fullback provides width, winger can cut inside
+  if (oppositeFullback?.playingStyle === 'Offensive Fullback') {
+    const cuttingWinger = candidates.find(c => 
+      c.player.playingStyle === 'Prolific Winger' && c.totalScore >= 70
+    );
+    if (cuttingWinger) return cuttingWinger.player;
+  }
+  
+  return candidates[0]?.player || null;
+}
+
+function selectLoneStriker(
+  players: Player[],
+  formation: Formation,
+  currentLineup: Player[]
+): Player | null {
+  const candidates = players
+    .filter(p => ['CF', 'SS'].includes(p.position))
+    .map(p => scorePlayerForPosition(p, 'CF', formation, currentLineup, null))
+    .sort((a, b) => b.totalScore - a.totalScore);
+  
+  // Analyze midfield support
+  const hasCam = currentLineup.some(p => p.position === 'AMF');
+  const hasWingers = currentLineup.some(p => ['LWF', 'RWF'].includes(p.position));
+  
+  // If lone striker with good support, prefer mobile striker
+  if (hasCam || hasWingers) {
+    const mobileStriker = candidates.find(c => 
+      ['Advanced Striker', 'Fox In The Box'].includes(c.player.playingStyle) &&
+      c.totalScore >= 70
+    );
+    if (mobileStriker) return mobileStriker.player;
+  }
+  
+  // If isolated, prefer target man
+  if (!hasCam && !hasWingers) {
+    const targetMan = candidates.find(c => 
+      c.player.playingStyle === 'Target Man' && c.totalScore >= 70
+    );
+    if (targetMan) return targetMan.player;
+  }
+  
+  return candidates[0]?.player || null;
+}
+
+function selectStrikerPair(
+  players: Player[],
+  formation: Formation,
+  currentLineup: Player[]
+): Player[] {
+  const candidates = players
+    .filter(p => ['CF', 'SS'].includes(p.position))
+    .map(p => scorePlayerForPosition(p, 'CF', formation, currentLineup, null))
+    .sort((a, b) => b.totalScore - a.totalScore);
+  
+  if (candidates.length < 2) {
+    return candidates.map(c => c.player);
+  }
+  
+  // Select first striker (usually best overall)
+  const firstStriker = candidates[0].player;
+  
+  // Select complementary second striker
+  const secondStriker = selectComplementaryStriker(
+    firstStriker,
+    candidates.slice(1)
+  );
+  
+  return [firstStriker, secondStriker];
+}
+
+function selectComplementaryStriker(
+  firstStriker: Player,
+  candidates: PlayerScore[]
+): Player {
+  const firstStyle = firstStriker.playingStyle;
+  
+  // Ideal striker partnerships
+  const complementaryPairs = {
+    'Target Man': ['Poacher', 'Advanced Striker', 'Fox In The Box'],
+    'Poacher': ['Target Man', 'Advanced Striker'],
+    'Fox In The Box': ['Target Man', 'Advanced Striker'],
+    'Advanced Striker': ['Poacher', 'Fox In The Box', 'Target Man'],
+  };
+  
+  const preferred = complementaryPairs[firstStyle] || [];
+  
+  // Look for complementary style
+  for (const style of preferred) {
+    const match = candidates.find(c => c.player.playingStyle === style);
+    if (match && match.totalScore >= 70) {
+      return match.player;
+    }
+  }
+  
+  // Fallback: best available
+  return candidates[0].player;
+}
+
+🔄 PART 4: LINEUP OPTIMIZATION
+4.1 Chemistry Optimization
+typescriptfunction optimizeLineup(
+  lineup: Player[],
+  formation: Formation
+): void {
+  // Run multiple optimization passes
+  for (let i = 0; i < 3; i++) {
+    const improved = optimizationPass(lineup, formation);
+    if (!improved) break; // No more improvements possible
+  }
+}
+
+function optimizationPass(
+  lineup: Player[],
+  formation: Formation
+): boolean {
+  let improved = false;
+  const teamChemistry = calculateTeamChemistry(lineup, formation);
+  
+  // Try swapping similar position players
+  const positionGroups = groupPlayersByPositionType(lineup);
+  
+  for (const [posType, players] of Object.entries(positionGroups)) {
+    if (players.length < 2) continue;
+    
+    // Try all possible swaps within position group
+    for (let i = 0; i < players.length; i++) {
+      for (let j = i + 1; j < players.length; j++) {
+        const newLineup = [...lineup];
+        
+        // Swap positions
+        const tempPos = players[i].assignedPosition;
+        players[i].assignedPosition = players[j].assignedPosition;
+        players[j].assignedPosition = tempPos;
+        
+        const newChemistry = calculateTeamChemistry(newLineup, formation);
+        
+        if (newChemistry > teamChemistry + 5) {
+          // Significant improvement, keep swap
+          improved = true;
+        } else {
+          // Revert swap
+          players[i].assignedPosition = tempPos;
+          players[j].assignedPosition = players[j].assignedPosition;
+        }
+      }
+    }
+  }
+  
+  return improved;
+}
+
+function calculateTeamChemistry(
+  lineup: Player[],
+  formation: Formation
+): number {
+  let totalChemistry = 0;
+  let linkCount = 0;
+  
+  // Calculate all player links
+  for (let i = 0; i < lineup.length; i++) {
+    for (let j = i + 1; j < lineup.length; j++) {
+      if (arePlayersLinked(lineup[i], lineup[j], formation)) {
+        const linkStrength = calculatePairSynergy(
+          lineup[i],
+          lineup[j],
+          ['tactical_link']
+        );
+        totalChemistry += linkStrength;
+        linkCount++;
+      }
+    }
+  }
+  
+  return linkCount > 0 ? totalChemistry / linkCount : 0;
+}
+
+function arePlayersLinked(
+  player1: Player,
+  player2: Player,
+  formation: Formation
+): boolean {
+  const pos1 = player1.assignedPosition;
+  const pos2 = player2.assignedPosition;
+  
+  // Define position links based on formation structure
+  const links = getFormationLinks(formation);
+  
+  return links[pos1]?.includes(pos2) || links[pos2]?.includes(pos1);
+}
+4.2 Tactical Balance Check
+typescriptinterface TacticalBalance {
+  attack: number;
+  defense: number;
+  balance: number;
+  issues: string[];
+  recommendations: string[];
+}
+
+function checkTacticalBalance(
+  lineup: Player[],
+  formation: Formation
+): TacticalBalance {
+  const issues: string[] = [];
+  const recommendations: string[] = [];
+  
+  // Check 1: Defensive Midfielder Coverage
+  const hasDMF = lineup.some(p => 
+    p.assignedPosition === 'DMF' || p.playingStyle === 'Anchor Man'
+  );
+  
+  if (!hasDMF && formation.midfielders >= 3) {
+    issues.push('No defensive shield in midfield');
+    recommendations.push('Consider using an Anchor Man or Orchestrator in DMF');
+  }
+  
+  // Check 2: Fullback Balance
+  const lb = lineup.find(p => p.assignedPosition === 'LB');
+  const rb = lineup.find(p => p.assignedPosition === 'RB');
+  
+  if (lb && rb) {
+    const bothOffensive = 
+      lb.playingStyle === 'Offensive Fullback' &&
+      rb.playingStyle === 'Offensive Fullback';
+    
+    const bothDefensive =
+      lb.playingStyle === 'Defensive Fullback' &&
+      rb.playingStyle === 'Defensive Fullback';
+    
+    if (bothOffensive && !hasDMF) {
+      issues.push('Both fullbacks offensive without defensive cover');
+      recommendations.push('Use at least one defensive fullback or add DMF');
+    }
+    
+    if (bothDefensive) {
+      const hasWingers = lineup.some(p => 
+        ['LWF', 'RWF'].includes(p.assignedPosition)
+      );
+      
+      if (!hasWingers) {
+        issues.push('No width in attack - both fullbacks defensive');
+        recommendations.push('Use at least one offensive fullback');
+      }
+    }
+  }
+  
+  // Check 3: Creative Players
+  const creativeStyles = [
+    'Creative Playmaker',
+    'Classic No. 10',
+    'Orchestrator',
+  ];
+  
+  const hasCreator = lineup.some(p => 
+    creativeStyles.includes(p.playingStyle)
+  );
+  
+  if (!hasCreator) {
+    issues.push('Lack of creative playmaker');
+    recommendations.push('Consider adding a Creative Playmaker or Classic No. 10');
+  }
+  
+  // Check 4: Striker Service
+  const strikers = lineup.filter(p => 
+    ['CF', 'SS'].includes(p.assignedPosition)
+  );
+  
+  if (strikers.length > 0) {
+    const hasTargetMan = strikers.some(s => s.playingStyle === 'Target Man');
+    const hasSupport = lineup.some(p => 
+      ['AMF', 'LWF', 'RWF'].includes(p.assignedPosition)
+    );
+    
+    if (hasTargetMan && !hasSupport) {
+      issues.push('Target man without adequate service');
+      recommendations.push('Add wingers or attacking midfielder for crosses');
+    }
+  }
+  
+  // Check 5: Age Balance
+  const avgAge = lineup.reduce((sum, p) => sum + p.age, 0) / lineup.length;
+  
+  if (avgAge > 30) {
+    issues.push('Team average age is high (30+)');
+    recommendations.push('Consider integrating younger players for legs');
+  }
+  
+  if (avgAge < 22) {
+    issues.push('Very young team - may lack experience');
+    recommendations.push('Balance with experienced players in key positions');
+  }
+  
+  // Calculate balance scores
+  const attackScore = calculateAttackingStrength(lineup);
+  const defenseScore = calculateDefensiveStrength(lineup);
+  const balanceScore = 100 - Math.abs(attackScore - defenseScore);
+  
+  return {
+    attack: attackScore,
+    defense: defenseScore,
+    balance: balanceScore,
+    issues,
+    recommendations,
+  };
+}
+
+function calculateAttackingStrength(lineup: Player[]): number {
+  const attackers = lineup.filter(p => 
+    ['CF', 'SS', 'LWF', 'RWF', 'AMF'].includes(p.assignedPosition)
+  );
+  
+  const offensiveFullbacks = lineup.filter(p =>
+    ['LB', 'RB'].includes(p.assignedPosition) &&
+    p.playingStyle === 'Offensive Fullback'
+  );
+  
+  const offensiveMidfielders = lineup.filter(p =>
+    ['CMF', 'DMF'].includes(p.assignedPosition) &&
+    ['Box-to-Box', 'Hole Player'].includes(p.playingStyle)
+  );
+  
+  const avgAttackerOVR = attackers.length > 0
+    ? attackers.reduce((sum, p) => sum + p.ovr, 0) / attackers.length
+    : 0;
+  
+  const supportScore = 
+    (offensiveFullbacks.length * 5) +
+    (offensiveMidfielders.length * 3);
+  
+  return normalizeOVR(avgAttackerOVR) + Math.min(supportScore, 20);
+}
+
+function calculateDefensiveStrength(lineup: Player[]): number {
+  const defenders = lineup.filter(p =>
+    ['GK', 'CB', 'LB', 'RB', 'DMF'].includes(p.assignedPosition)
+  );
+  
+  const destroyers = lineup.filter(p =>
+    ['Destroyer', 'Anchor Man', 'Defensive Fullback'].includes(p.playingStyle)
+  );
+  
+  const avgDefenderOVR = defenders.length > 0
+    ? defenders.reduce((sum, p) => sum + p.ovr, 0) / defenders.length
+    : 0;
+  
+  const solidityBonus = destroyers.length * 3;
+  
+  return normalizeOVR(avgDefenderOVR) + Math.min(solidityBonus, 15);
+}
+
+📋 PART 5: SUBSTITUTION & BENCH STRATEGY
+5.1 Intelligent Bench Selection
+typescriptinterface BenchPlayer {
+  player: Player;
+  role: 'defensive_cover' | 'attacking_option' | 'utility' | 'like_for_like';
+  priority: number;
+  canCoverPositions: string[];
+}
+
+function selectBench(
+  remainingPlayers: Player[],
+  startingXI: Player[],
+  formation: Formation
+): BenchPlayer[] {
+  const bench: BenchPlayer[] = [];
+  const benchSize = 7; // Standard bench size
+  
+  // PRIORITY 1: Backup Goalkeeper
+  const backupGK = selectBackupGoalkeeper(remainingPlayers, startingXI);
+  if (backupGK) {
+    bench.push({
+      player: backupGK,
+      role: 'like_for_like',
+      priority: 100,
+      canCoverPositions: ['GK'],
+    });
+    removePlayer(remainingPlayers, backupGK);
+  }
+  
+  // PRIORITY 2: Defensive Cover
+  const defensiveCover = selectDefensiveCover(remainingPlayers, startingXI);
+  if (defensiveCover) {
+    bench.push({
+      player: defensiveCover,
+      role: 'defensive_cover',
+      priority: 90,
+      canCoverPositions: ['CB', 'RB', 'LB', 'DMF'],
+    });
+    removePlayer(remainingPlayers, defensiveCover);
+  }
+  
+  // PRIORITY 3: Utility Midfielder
+  const utilityMid = selectUtilityPlayer(remainingPlayers, ['CMF', 'DMF', 'AMF']);
+  if (utilityMid) {
+    bench.push({
+      player: utilityMid,
+      role: 'utility',
+      priority: 85,
+      canCoverPositions: ['CMF', 'DMF', 'AMF', 'LMF', 'RMF'],
+    });
+    removePlayer(remainingPlayers, utilityMid);
+  }
+  
+  // PRIORITY 4: Attacking Impact Sub
+  const impactAttacker = selectImpactAttacker(remainingPlayers, startingXI);
+  if (impactAttacker) {
+    bench.push({
+      player: impactAttacker,
+      role: 'attacking_option',
+      priority: 80,
+      canCoverPositions: ['CF', 'SS', 'LWF', 'RWF', 'AMF'],
+    });
+    removePlayer(remainingPlayers, impactAttacker);
+  }
+  
+  // PRIORITY 5: Fill remaining spots with best available
+  while (bench.length < benchSize && remainingPlayers.length > 0) {
+    const bestRemaining = remainingPlayers
+      .sort((a, b) => b.ovr - a.ovr)[0];
+    
+    bench.push({
+      player: bestRemaining,
+      role: determinePlayerRole(bestRemaining),
+      priority: 70 - (bench.length * 5),
+      canCoverPositions: getPlayerCoverage(bestRemaining),
+    });
+    
+    removePlayer(remainingPlayers, bestRemaining);
+  }
+  
+  return bench.sort((a, b) => b.priority - a.priority);
+}
+
+function selectImpactAttacker(
+  players: Player[],
+  startingXI: Player[]
+): Player | null {
+  // Look for fast, direct attackers for late-game impact
+  const impactStyles = ['Prolific Winger', 'Poacher', 'Advanced Striker'];
+  
+  const candidates = players
+    .filter(p => ['CF', 'SS', 'LWF', 'RWF'].includes(p.position))
+    .filter(p => impactStyles.includes(p.playingStyle))
+    .sort((a, b) => b.ovr - a.ovr);
+  
+  return candidates[0] || null;
+}
+
+function determinePlayerRole(player: Player): BenchPlayer['role'] {
+  if (['CB', 'RB', 'LB', 'DMF'].includes(player.position)) {
+    return 'defensive_cover';
+  }
+  
+  if (['CF', 'SS', 'LWF', 'RWF'].includes(player.position)) {
+    return 'attacking_option';
+  }
+  
+  if (['CMF'].includes(player.position)) {
+    return 'utility';
+  }
+  
+  return 'like_for_like';
+}
+
+function getPlayerCoverage(player: Player): string[] {
+  const compatibility = positionCompatibility[player.position];
+  
+  return [
+    ...compatibility.primary,
+    ...compatibility.secondary,
+    ...compatibility.tertiary,
+  ];
+}
+5.2 Substitution Recommendations
+typescriptinterface SubstitutionScenario {
+  minute: number;
+  situation: string;
+  recommendations: SubstitutionRecommendation[];
+}
+
+interface SubstitutionRecommendation {
+  playerOut: Player;
+  playerIn: BenchPlayer;
+  reason: string;
+  impact: {
+    attack: number;
+    defense: number;
+    freshness: number;
+  };
+}
+
+function generateSubstitutionPlan(
+  startingXI: Player[],
+  bench: BenchPlayer[],
+  matchContext: MatchContext
+): SubstitutionScenario[] {
+  const scenarios: SubstitutionScenario[] = [];
+  
+  // SCENARIO 1: Winning and protecting lead (70-80 mins)
+  scenarios.push({
+    minute: 75,
+    situation: 'Protecting 1-goal lead',
+    recommendations: generateDefensiveSubs(startingXI, bench),
+  });
+  
+  // SCENARIO 2: Drawing and need to win (65-75 mins)
+  scenarios.push({
+    minute: 70,
+    situation: 'Chasing a goal',
+    recommendations: generateAttackingSubs(startingXI, bench),
+  });
+  
+  // SCENARIO 3: Losing and desperate (60+ mins)
+  scenarios.push({
+    minute: 60,
+    situation: 'Urgent need for goals',
+    recommendations: generateUrgentAttackingSubs(startingXI, bench),
+  });
+  
+  // SCENARIO 4: FitnessContinue12:11 AMmanagement (60-70 mins)
+scenarios.push({
+minute: 65,
+situation: 'Managing player fitness',
+recommendations: generateFreshnessSubs(startingXI, bench),
+});
+return scenarios;
+}
+function generateDefensiveSubs(
+startingXI: Player[],
+bench: BenchPlayer[]
+): SubstitutionRecommendation[] {
+const subs: SubstitutionRecommendation[] = [];
+// SUB 1: Replace attacking midfielder with defensive midfielder
+const amf = startingXI.find(p => p.assignedPosition === 'AMF');
+const defensiveMid = bench.find(b =>
+b.role === 'defensive_cover' || b.role === 'utility'
+);
+if (amf && defensiveMid) {
+subs.push({
+playerOut: amf,
+playerIn: defensiveMid,
+reason: 'Add defensive solidity, protect lead',
+impact: { attack: -10, defense: +15, freshness: +20 },
+});
+}
+// SUB 2: Replace winger with defensive fullback/wing-back
+const winger = startingXI.find(p =>
+['LWF', 'RWF'].includes(p.assignedPosition)
+);
+const defensiveWide = bench.find(b =>
+b.canCoverPositions.includes('LB') || b.canCoverPositions.includes('RB')
+);
+if (winger && defensiveWide) {
+subs.push({
+playerOut: winger,
+playerIn: defensiveWide,
+reason: 'Extra defender, compact shape',
+impact: { attack: -15, defense: +20, freshness: +15 },
+});
+}
+// SUB 3: Fresh legs in midfield
+const tiredMidfielder = startingXI
+.filter(p => ['CMF', 'DMF'].includes(p.assignedPosition))
+.sort((a, b) => a.age - b.age)[0]; // Youngest likely most tired
+const freshMidfielder = bench.find(b => b.role === 'utility');
+if (tiredMidfielder && freshMidfielder && freshMidfielder !== defensiveMid) {
+subs.push({
+playerOut: tiredMidfielder,
+playerIn: freshMidfielder,
+reason: 'Fresh legs to press and cover ground',
+impact: { attack: 0, defense: +10, freshness: +25 },
+});
+}
+return subs;
+}
+function generateAttackingSubs(
+startingXI: Player[],
+bench: BenchPlayer[]
+): SubstitutionRecommendation[] {
+const subs: SubstitutionRecommendation[] = [];
+// SUB 1: Bring on impact attacker
+const tiredStriker = startingXI.find(p =>
+['CF', 'SS'].includes(p.assignedPosition)
+);
+const impactAttacker = bench.find(b => b.role === 'attacking_option');
+if (tiredStriker && impactAttacker) {
+subs.push({
+playerOut: tiredStriker,
+playerIn: impactAttacker,
+reason: 'Fresh attacking threat, speed vs tired defenders',
+impact: { attack: +15, defense: -5, freshness: +30 },
+});
+}
+// SUB 2: Replace defensive midfielder with attacking mid
+const dmf = startingXI.find(p => p.assignedPosition === 'DMF');
+const attackingMid = bench.find(b =>
+b.canCoverPositions.includes('AMF')
+);
+if (dmf && attackingMid) {
+subs.push({
+playerOut: dmf,
+playerIn: attackingMid,
+reason: 'More creativity and attacking presence',
+impact: { attack: +20, defense: -15, freshness: +20 },
+});
+}
+// SUB 3: Add width - winger for fullback
+const defensiveFullback = startingXI.find(p =>
+(['LB', 'RB'].includes(p.assignedPosition)) &&
+p.playingStyle === 'Defensive Fullback'
+);
+const winger = bench.find(b =>
+b.canCoverPositions.includes('LWF') || b.canCoverPositions.includes('RWF')
+);
+if (defensiveFullback && winger) {
+subs.push({
+playerOut: defensiveFullback,
+playerIn: winger,
+reason: 'Add width and attacking overload',
+impact: { attack: +25, defense: -20, freshness: +15 },
+});
+}
+return subs;
+}
+
+---
+
+## 🎨 PART 6: OUTPUT FORMATTING & EXPLANATIONS
+
+### 6.1 Generate Detailed Explanation
+```typescript
+interface RecommendationOutput {
+  formation: Formation;
+  startingXI: PlayerWithExplanation[];
+  bench: BenchPlayer[];
+  tacticalAnalysis: TacticalAnalysis;
+  alternativeOptions: AlternativeFormation[];
+  keyInsights: string[];
+}
+
+interface PlayerWithExplanation {
+  player: Player;
+  position: string;
+  score: number;
+  explanation: {
+    whySelected: string;
+    strengths: string[];
+    roleInTeam: string;
+    chemistryLinks: string[];
+  };
+}
+
+function generateFullRecommendation(
+  squad: Player[],
+  analysis: SquadAnalysis
+): RecommendationOutput {
+  // 1. Select best formation
+  const formation = selectBestFormation(squad, analysis);
+  
+  // 2. Build starting XI with explanations
+  const startingXI = selectStartingXI(squad, formation, analysis);
+  const startingXIWithExplanations = startingXI.map(player => 
+    addPlayerExplanation(player, formation, startingXI, analysis)
+  );
+  
+  // 3. Select bench
+  const remainingPlayers = squad.filter(p => !startingXI.includes(p));
+  const bench = selectBench(remainingPlayers, startingXI, formation);
+  
+  // 4. Generate tactical analysis
+  const tacticalAnalysis = generateTacticalAnalysis(
+    formation,
+    startingXI,
+    analysis
+  );
+  
+  // 5. Provide alternative options
+  const alternatives = generateAlternativeFormations(squad, formation, analysis);
+  
+  // 6. Key insights
+  const insights = generateKeyInsights(
+    formation,
+    startingXI,
+    analysis,
+    tacticalAnalysis
+  );
+  
+  return {
+    formation,
+    startingXI: startingXIWithExplanations,
+    bench,
+    tacticalAnalysis,
+    alternativeOptions: alternatives,
+    keyInsights: insights,
+  };
+}
+
+function addPlayerExplanation(
+  player: Player,
+  formation: Formation,
+  lineup: Player[],
+  analysis: SquadAnalysis
+): PlayerWithExplanation {
+  const score = scorePlayerForPosition(
+    player,
+    player.assignedPosition,
+    formation,
+    lineup,
+    analysis
+  );
+  
+  // Generate why selected
+  const whySelected = generateWhySelected(player, score, analysis);
+  
+  // Identify strengths
+  const strengths = identifyPlayerStrengths(player, player.assignedPosition);
+  
+  // Describe role
+  const roleInTeam = describePlayerRole(player, formation, lineup);
+  
+  // Find chemistry links
+  const chemistryLinks = findChemistryLinks(player, lineup, formation);
+  
+  return {
+    player,
+    position: player.assignedPosition,
+    score: score.totalScore,
+    explanation: {
+      whySelected,
+      strengths,
+      roleInTeam,
+      chemistryLinks,
+    },
+  };
+}
+
+function generateWhySelected(
+  player: Player,
+  score: PlayerScore,
+  analysis: SquadAnalysis
+): string {
+  const reasons: string[] = [];
+  
+  // Highest score reason
+  const topFactors = Object.entries(score.breakdown)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 2);
+  
+  for (const [factor, value] of topFactors) {
+    if (value >= 85) {
+      reasons.push(getFactorExplanation(factor, value, player));
+    }
+  }
+  
+  // Age consideration
+  if (player.age >= 19 && player.age <= 28) {
+    reasons.push('in prime years for this position');
+  } else if (player.age < 19) {
+    reasons.push('young prospect with high potential');
+  }
+  
+  // Playing style fit
+  const styleFit = score.breakdown.playingStyleFit;
+  if (styleFit >= 90) {
+    reasons.push(`perfect playing style (${player.playingStyle}) for this formation`);
+  }
+  
+  return reasons.join(', ');
+}
+
+function getFactorExplanation(
+  factor: string,
+  value: number,
+  player: Player
+): string {
+  const explanations = {
+    positionSuitability: `natural fit at ${player.assignedPosition}`,
+    ovrRating: `highest overall rating (${player.ovr}) available`,
+    playingStyleFit: `ideal playing style for tactical system`,
+    ageOptimization: `perfect age profile for this role`,
+    chemistryBonus: `excellent chemistry with teammates`,
+    formationSynergy: `playing style perfectly suits formation`,
+  };
+  
+  return explanations[factor] || 'strong overall profile';
+}
+
+function identifyPlayerStrengths(
+  player: Player,
+  position: string
+): string[] {
+  const strengths: string[] = [];
+  
+  // Based on playing style
+  const styleStrengths = {
+    'Offensive Goalkeeper': ['Distribution', 'Sweeping', 'Playing out from back'],
+    'Build Up': ['Passing', 'Ball control', 'Initiating attacks'],
+    'Destroyer': ['Tackling', 'Physical duels', 'Defensive aggression'],
+    'Extra Frontman': ['Set piece threat', 'Attacking headers', 'Forward runs'],
+    'Offensive Fullback': ['Overlapping runs', 'Crossing', 'Width provision'],
+    'Anchor Man': ['Defensive positioning', 'Interceptions', 'Shielding defense'],
+    'Orchestrator': ['Long passing', 'Vision', 'Tempo control'],
+    'Box-to-Box': ['Work rate', 'Stamina', 'All-round contribution'],
+    'Hole Player': ['Late runs', 'Off-ball movement', 'Attacking positioning'],
+    'Classic No. 10': ['Creativity', 'Through balls', 'Space occupation'],
+    'Creative Playmaker': ['Vision', 'Key passes', 'Chance creation'],
+    'Prolific Winger': ['Cutting inside', 'Shooting', 'Goal threat'],
+    'Poacher': ['Finishing', 'Positioning', 'Instinctive goals'],
+    'Fox In The Box': ['Clinical finishing', 'Movement in box', 'Composure'],
+    'Advanced Striker': ['Link-up play', 'Mobility', 'Dropping deep'],
+    'Target Man': ['Physical presence', 'Hold-up play', 'Aerial dominance'],
+  };
+  
+  return styleStrengths[player.playingStyle] || ['Solid all-round ability'];
+}
+
+function describePlayerRole(
+  player: Player,
+  formation: Formation,
+  lineup: Player[]
+): string {
+  const position = player.assignedPosition;
+  const style = player.playingStyle;
+  
+  // GK roles
+  if (position === 'GK') {
+    return style === 'Offensive Goalkeeper'
+      ? 'Sweeper keeper - plays high, distributes quickly, acts as extra defender'
+      : 'Traditional keeper - stays on line, focuses on shot-stopping';
+  }
+  
+  // Defender roles
+  if (['CB', 'RB', 'LB'].includes(position)) {
+    if (style === 'Extra Frontman') {
+      return 'Ball-playing defender who joins attacks, especially on set pieces';
+    } else if (style === 'Build Up') {
+      return 'Initiates build-up play from the back with passing';
+    } else if (style === 'Destroyer') {
+      return 'Aggressive defender focused on winning duels and stopping attacks';
+    } else if (style === 'Offensive Fullback') {
+      return 'Provides width by overlapping wingers and delivering crosses';
+    } else if (style === 'Defensive Fullback') {
+      return 'Stays back to provide defensive solidity';
+    } else if (style === 'Roaming Flank') {
+      return 'Versatile wide player who roams into midfield';
+    }
+  }
+  
+  // Midfielder roles
+  if (['DMF', 'CMF', 'AMF'].includes(position)) {
+    if (style === 'Anchor Man') {
+      return 'Defensive anchor who shields the back line and breaks up play';
+    } else if (style === 'Orchestrator') {
+      return 'Deep-lying playmaker who dictates tempo and initiates attacks';
+    } else if (style === 'Box-to-Box') {
+      return 'Complete midfielder covering both boxes with high work rate';
+    } else if (style === 'Hole Player') {
+      return 'Makes late runs into the box from midfield';
+    } else if (style === 'Classic No. 10') {
+      return 'Traditional playmaker operating in the hole behind striker';
+    } else if (style === 'Creative Playmaker') {
+      return 'Creates chances with vision and through balls';
+    }
+  }
+  
+  // Attacker roles
+  if (['LWF', 'RWF', 'CF', 'SS'].includes(position)) {
+    if (style === 'Prolific Winger') {
+      return 'Cuts inside from wing to shoot and score goals';
+    } else if (style === 'Poacher') {
+      return 'Penalty box predator with instinctive finishing';
+    } else if (style === 'Fox In The Box') {
+      return 'Clinical finisher who excels in tight spaces';
+    } else if (style === 'Advanced Striker') {
+      return 'Mobile forward who drops deep to link play';
+    } else if (style === 'Target Man') {
+      return 'Physical striker for hold-up play and aerial dominance';
+    }
+  }
+  
+  return 'Key player in tactical system';
+}
+
+function findChemistryLinks(
+  player: Player,
+  lineup: Player[],
+  formation: Formation
+): string[] {
+  const links: string[] = [];
+  const adjacentPositions = getAdjacentPositions(player.assignedPosition, formation);
+  
+  for (const adjPos of adjacentPositions) {
+    const adjacent = lineup.find(p => p.assignedPosition === adjPos);
+    if (!adjacent) continue;
+    
+    const synergy = calculatePairSynergy(player, adjacent, ['tactical']);
+    
+    if (synergy >= 85) {
+      links.push(
+        `Strong link with ${adjacent.name} (${adjPos}) - ${player.playingStyle} + ${adjacent.playingStyle}`
+      );
+    } else if (synergy <= 40) {
+      links.push(
+        `Potential conflict with ${adjacent.name} (${adjPos}) - may need tactical adjustment`
+      );
+    }
+  }
+  
+  return links;
+}
+```
+
+---
+
+## ✅ FINAL SUMMARY
+
+### System Capabilities
+
+**1. Formation Intelligence**
+- Analyzes squad depth and quality
+- Matches playing styles to formations
+- Considers tactical trends and team DNA
+- Provides 3+ formation options with scores
+
+**2. Player Selection**
+- Multi-factor weighted scoring (6 factors)
+- Position suitability matrix
+- Playing style compatibility
+- Age optimization curves
+- Chemistry calculations
+- Context-aware decision making
+
+**3. Team Chemistry**
+- Pair synergy analysis
+- Complementary style matching
+- Positional link strength
+- Anti-synergy detection
+
+**4. Tactical Balance**
+- Attack/defense equilibrium
+- Fullback balance logic
+- Midfield coverage analysis
+- Creative player requirements
+- Age distribution monitoring
+
+**5. Bench & Substitutions**
+- Strategic bench selection (7 players)
+- Scenario-based sub recommendations
+- Impact analysis (attack/defense/freshness)
+- Fitness management strategies
+
+**6. Detailed Explanations**
+- Why each player was selected
+- Individual player strengths
+- Role descriptions
+- Chemistry link explanations
+- Alternative options
+
+---
+
+**INI ADALAH SISTEM REKOMENDASI AI YANG SANGAT MANTAP! 💪🔥
+
+⚠️ YANG PERLU DIPERBAIKI/DITAMBAHKAN:
+1. Missing Helper Functions
+Ada banyak fungsi yang direferensikan tapi belum didefinisikan:
+typescript// PERLU DITAMBAHKAN:
+
+function normalizeOVR(ovr: number): number {
+  // Normalize OVR 40-99 ke scale 0-100
+  return ((ovr - 40) / (99 - 40)) * 100;
+}
+
+function getPositionType(position: string): string {
+  if (position === 'GK') return 'GK';
+  if (['CB', 'RB', 'LB'].includes(position)) return 'defender';
+  if (['DMF', 'CMF', 'AMF', 'LMF', 'RMF'].includes(position)) return 'midfielder';
+  if (['LWF', 'RWF', 'CF', 'SS'].includes(position)) return 'attacker';
+  return 'midfielder';
+}
+
+function removePlayer(array: Player[], player: Player): void {
+  const index = array.indexOf(player);
+  if (index > -1) array.splice(index, 1);
+}
+
+function calculateAverageOVR(players: Player[]): number {
+  if (players.length === 0) return 0;
+  return players.reduce((sum, p) => sum + p.ovr, 0) / players.length;
+}
+
+function calculatePositionSuitability(player: Player, targetPosition: string): number {
+  const compatibility = positionCompatibility[player.position];
+  if (!compatibility) return 0;
+  
+  if (compatibility.primary.includes(targetPosition)) return 100;
+  if (compatibility.secondary.includes(targetPosition)) return 70;
+  if (compatibility.tertiary.includes(targetPosition)) return 40;
+  return 0;
+}
+
+function calculateStyleFit(
+  player: Player, 
+  position: string, 
+  formation: Formation
+): number {
+  const styleData = playingStyleMatrix[player.playingStyle];
+  if (!styleData) return 50;
+  
+  return styleData.formations[formation.name] || 50;
+}
+
+function getAdjacentPositions(position: string, formation: Formation): string[] {
+  // Simplified version - needs full implementation based on formation
+  const adjacency = {
+    'GK': ['CB'],
+    'CB': ['GK', 'CB', 'RB', 'LB', 'DMF'],
+    'RB': ['CB', 'RMF', 'RWF', 'DMF'],
+    'LB': ['CB', 'LMF', 'LWF', 'DMF'],
+    'DMF': ['CB', 'CMF', 'RB', 'LB'],
+    'CMF': ['DMF', 'CMF', 'AMF', 'LMF', 'RMF'],
+    'AMF': ['CMF', 'LWF', 'RWF', 'CF', 'SS'],
+    'LWF': ['LB', 'LMF', 'AMF', 'CF'],
+    'RWF': ['RB', 'RMF', 'AMF', 'CF'],
+    'CF': ['AMF', 'LWF', 'RWF', 'SS'],
+    'SS': ['CF', 'AMF'],
+  };
+  
+  return adjacency[position] || [];
+}
+
+function getFormationMidfieldPositions(formation: Formation): string[] {
+  // Example: '4-3-3' → ['DMF', 'CMF', 'CMF']
+  // This needs mapping based on your formation structure
+  const formationMap = {
+    '4-3-3': ['DMF', 'CMF', 'CMF'],
+    '4-2-3-1': ['DMF', 'DMF', 'AMF'],
+    '4-4-2': ['CMF', 'CMF', 'CMF', 'CMF'],
+    '3-5-2': ['DMF', 'CMF', 'CMF', 'LMF', 'RMF'],
+    // ... more formations
+  };
+  
+  return formationMap[formation.name] || [];
+}
+
+function getFormationAttackPositions(formation: Formation): string[] {
+  const formationMap = {
+    '4-3-3': ['LWF', 'CF', 'RWF'],
+    '4-2-3-1': ['CF'],
+    '4-4-2': ['CF', 'CF'],
+    '3-5-2': ['CF', 'CF'],
+    // ... more formations
+  };
+  
+  return formationMap[formation.name] || [];
+}
+
+function selectGoalkeeper(
+  players: Player[], 
+  formation: Formation
+): Player {
+  return players
+    .filter(p => p.position === 'GK')
+    .sort((a, b) => b.ovr - a.ovr)[0];
+}
+
+function selectBackupGoalkeeper(
+  players: Player[],
+  startingXI: Player[]
+): Player | null {
+  return players
+    .filter(p => p.position === 'GK')
+    .sort((a, b) => b.ovr - a.ovr)[0] || null;
+}
+
+function selectDefensiveCover(
+  players: Player[],
+  startingXI: Player[]
+): Player | null {
+  return players
+    .filter(p => ['CB', 'RB', 'LB', 'DMF'].includes(p.position))
+    .sort((a, b) => b.ovr - a.ovr)[0] || null;
+}
+
+function selectUtilityPlayer(
+  players: Player[],
+  positions: string[]
+): Player | null {
+  return players
+    .filter(p => positions.includes(p.position))
+    .sort((a, b) => b.ovr - a.ovr)[0] || null;
+}
+
+2. Formation Structure Definition
+Anda perlu definisi struktur Formation:
+typescriptinterface Formation {
+  name: string; // e.g., '4-3-3'
+  defenders: number; // 3, 4, or 5
+  midfielders: number; // 3, 4, or 5
+  attackers: number; // 1, 2, or 3
+  positions: {
+    GK: number;
+    CB: number;
+    RB: number;
+    LB: number;
+    DMF?: number;
+    CMF?: number;
+    AMF?: number;
+    LMF?: number;
+    RMF?: number;
+    LWF?: number;
+    RWF?: number;
+    CF?: number;
+    SS?: number;
+  };
+  description: string;
+  suitableFor: string[]; // Playing styles that work well
+}
+
+const formations: Formation[] = [
+  {
+    name: '4-3-3',
+    defenders: 4,
+    midfielders: 3,
+    attackers: 3,
+    positions: {
+      GK: 1, CB: 2, RB: 1, LB: 1,
+      DMF: 1, CMF: 2,
+      LWF: 1, CF: 1, RWF: 1,
+    },
+    description: 'Attacking formation with width',
+    suitableFor: ['Prolific Winger', 'Offensive Fullback', 'Anchor Man'],
+  },
+  {
+    name: '4-2-3-1',
+    defenders: 4,
+    midfielders: 3,
+    attackers: 1,
+    positions: {
+      GK: 1, CB: 2, RB: 1, LB: 1,
+      DMF: 2, AMF: 1,
+      LWF: 1, CF: 1, RWF: 1,
+    },
+    description: 'Balanced with strong CAM',
+    suitableFor: ['Classic No. 10', 'Hole Player', 'Anchor Man'],
+  },
+  // ... more formations
+];
+
+3. Player Interface Definition
+typescriptinterface Player {
+  id: string;
+  name: string;
+  position: string; // Primary position (GK, CB, RB, etc.)
+  ovr: number; // Overall rating 40-99
+  age: number;
+  playingStyle: string;
+  assignedPosition?: string; // Position in lineup
+  height?: number; // For Target Man check
+}
+
+4. Missing 3-Back and 5-Back Selection Logic
+typescriptfunction select3ManDefense(
+  players: Player[],
+  formation: Formation
+): Player[] {
+  const defenseLine: Player[] = [];
+  
+  // Select 3 best CBs
+  const cbCandidates = players
+    .filter(p => ['CB', 'DMF'].includes(p.position))
+    .sort((a, b) => b.ovr - a.ovr);
+  
+  // Take top 3, ensuring variety in playing styles
+  const cb1 = cbCandidates[0];
+  defenseLine.push(cb1);
+  
+  const cb2 = selectComplementaryCB(cb1, cbCandidates.slice(1));
+  defenseLine.push(cb2);
+  
+  const remaining = cbCandidates.filter(p => 
+    p !== cb1 && p !== cb2
+  );
+  defenseLine.push(remaining[0]);
+  
+  return defenseLine;
+}
+
+function select5ManDefense(
+  players: Player[],
+  formation: Formation
+): Player[] {
+  // 5-back usually: LWB - CB - CB - CB - RWB
+  const defenseLine: Player[] = [];
+  
+  // Select 3 CBs first
+  const cbs = select3ManDefense(players, formation);
+  defenseLine.push(...cbs);
+  
+  // Then wing-backs
+  const lwb = players
+    .filter(p => !defenseLine.includes(p))
+    .filter(p => ['LB', 'LWB', 'LMF'].includes(p.position))
+    .sort((a, b) => b.ovr - a.ovr)[0];
+  
+  const rwb = players
+    .filter(p => !defenseLine.includes(p))
+    .filter(p => ['RB', 'RWB', 'RMF'].includes(p.position))
+    .sort((a, b) => b.ovr - a.ovr)[0];
+  
+  defenseLine.push(lwb, rwb);
+  
+  return defenseLine;
+}
+
+5. Missing Analysis Functions
+typescriptfunction calculatePhysicality(players: Player[]): number {
+  // Simplified - would need actual physical stats
+  const physicalStyles = [
+    'Destroyer', 'Target Man', 'Box-to-Box'
+  ];
+  
+  const physicalPlayers = players.filter(p => 
+    physicalStyles.includes(p.playingStyle)
+  );
+  
+  return (physicalPlayers.length / players.length) * 100;
+}
+
+function calculateTechnique(players: Player[]): number {
+  const technicalStyles = [
+    'Build Up', 'Orchestrator', 'Creative Playmaker', 
+    'Classic No. 10', 'Prolific Winger'
+  ];
+  
+  const technicalPlayers = players.filter(p => 
+    technicalStyles.includes(p.playingStyle)
+  );
+  
+  return (technicalPlayers.length / players.length) * 100;
+}
+
+function findWeakestPosition(players: Player[]): string {
+  const positionGroups = {
+    'GK': players.filter(p => p.position === 'GK'),
+    'Defense': players.filter(p => ['CB', 'RB', 'LB'].includes(p.position)),
+    'Midfield': players.filter(p => ['DMF', 'CMF', 'AMF'].includes(p.position)),
+    'Attack': players.filter(p => ['LWF', 'RWF', 'CF', 'SS'].includes(p.position)),
+  };
+  
+  const avgByPosition = Object.entries(positionGroups).map(([pos, players]) => ({
+    position: pos,
+    avgOVR: players.length > 0 
+      ? players.reduce((sum, p) => sum + p.ovr, 0) / players.length 
+      : 0,
+  }));
+  
+  return avgByPosition.sort((a, b) => a.avgOVR - b.avgOVR)[0].position;
+}
+
+function groupPlayersByPositionType(lineup: Player[]): Record<string, Player[]> {
+  return {
+    defenders: lineup.filter(p => ['CB', 'RB', 'LB'].includes(p.assignedPosition)),
+    midfielders: lineup.filter(p => ['DMF', 'CMF', 'AMF', 'LMF', 'RMF'].includes(p.assignedPosition)),
+    attackers: lineup.filter(p => ['LWF', 'RWF', 'CF', 'SS'].includes(p.assignedPosition)),
+  };
+}
+
+function getFormationLinks(formation: Formation): Record<string, string[]> {
+  // Simplified - would need formation-specific logic
+  return {
+    'CB': ['GK', 'CB', 'RB', 'LB', 'DMF'],
+    'RB': ['CB', 'DMF', 'RMF', 'RWF'],
+    'LB': ['CB', 'DMF', 'LMF', 'LWF'],
+    'DMF': ['CB', 'CMF'],
+    'CMF': ['DMF', 'CMF', 'AMF', 'LMF', 'RMF'],
+    'AMF': ['CMF', 'LWF', 'RWF', 'CF'],
+    'LWF': ['LB', 'AMF', 'CF'],
+    'RWF': ['RB', 'AMF', 'CF'],
+    'CF': ['AMF', 'LWF', 'RWF'],
+  };
+}
+
+6. Missing High-Level Functions
+typescriptfunction selectBestFormation(
+  squad: Player[],
+  analysis: SquadAnalysis
+): Formation {
+  const formationScores = formations.map(formation => ({
+    formation,
+    score: calculateFormationScore(formation, squad, analysis),
+  }));
+  
+  return formationScores.sort((a, b) => b.score - a.score)[0].formation;
+}
+
+function identifyTacticalDNA(
+  wingStrength: number,
+  strikerStrength: number,
+  defenseStrength: number,
+  midfieldStrength: number,
+  styleCount: Record<string, number>
+): string {
+  if (wingStrength >= 75 && strikerStrength >= 70) {
+    return 'attacking_possession';
+  }
+  
+  if (defenseStrength >= 75) {
+    return 'defensive_counter';
+  }
+  
+  if (midfieldStrength >= 75) {
+    return 'midfield_control';
+  }
+  
+  return 'balanced';
+}
+
+function generateFormationRecommendations(tacticalDNA: string): Formation[] {
+  const recommendations = {
+    'attacking_possession': ['4-3-3', '4-2-3-1', '3-4-3'],
+    'defensive_counter': ['5-3-2', '4-4-2', '4-5-1'],
+    'midfield_control': ['4-3-3', '3-5-2', '4-2-3-1'],
+    'balanced': ['4-3-3', '4-4-2', '4-2-3-1'],
+  };
+  
+  const formationNames = recommendations[tacticalDNA] || recommendations['balanced'];
+  return formations.filter(f => formationNames.includes(f.name));
+}
+
+function calculatePositionCoverage(
+  formation: Formation,
+  squad: Player[]
+): number {
+  let coverage = 0;
+  let totalPositions = 0;
+  
+  for (const [position, count] of Object.entries(formation.positions)) {
+    if (count > 0) {
+      const availablePlayers = squad.filter(p => 
+        p.position === position || 
+        positionCompatibility[p.position]?.secondary.includes(position)
+      );
+      
+      coverage += Math.min(availablePlayers.length / count, 1) * 100;
+      totalPositions++;
+    }
+  }
+  
+  return coverage / totalPositions;
+}
+
+function calculateTacticalFit(
+  formation: Formation,
+  analysis: SquadAnalysis
+): number {
+  let score = 0;
+  
+  // Check if formation suits squad strengths
+  if (formation.name.includes('3-3') && analysis.strengths.wings >= 75) {
+    score += 30; // Bonus for wing-heavy formation with strong wingers
+  }
+  
+  if (formation.defenders >= 5 && analysis.strengths.defense >= 75) {
+    score += 30; // Bonus for defensive formation with strong defense
+  }
+  
+  if (formation.midfielders >= 4 && analysis.strengths.center >= 75) {
+    score += 30; // Bonus for midfield-heavy with strong center
+  }
+  
+  // Check playing style distribution
+  const styleScores = Object.entries(analysis.characteristics.playingStyleDistribution)
+    .map(([style, count]) => {
+      const styleData = playingStyleMatrix[style];
+      return (styleData?.formations[formation.name] || 50) * (count / 11);
+    });
+  
+  score += styleScores.reduce((sum, s) => sum + s, 0) / 11;
+  
+  return Math.min(score, 100);
+}
+
+function calculateQualityUtilization(
+  formation: Formation,
+  squad: Player[]
+): number {
+  // Measure how well formation uses best players
+  const topPlayers = squad
+    .sort((a, b) => b.ovr - a.ovr)
+    .slice(0, 11);
+  
+  let utilizationScore = 0;
+  
+  for (const player of topPlayers) {
+    const positionScore = calculatePositionSuitability(
+      player,
+      player.position
+    );
+    const styleScore = calculateStyleFit(
+      player,
+      player.position,
+      formation
+    );
+    
+    utilizationScore += (positionScore + styleScore) / 2;
+  }
+  
+  return utilizationScore / 11;
+}
+
+7. Missing Substitution Functions
+typescriptfunction generateFreshnessSubs(
+  startingXI: Player[],
+  bench: BenchPlayer[]
+): SubstitutionRecommendation[] {
+  const subs: SubstitutionRecommendation[] = [];
+  
+  // Identify oldest/most tired players
+  const tiredPlayers = startingXI
+    .filter(p => p.age >= 30)
+    .sort((a, b) => b.age - a.age)
+    .slice(0, 3);
+  
+  for (const tired of tiredPlayers) {
+    const replacement = bench.find(b => 
+      b.canCoverPositions.includes(tired.assignedPosition) &&
+      b.player.ovr >= tired.ovr - 5
+    );
+    
+    if (replacement) {
+      subs.push({
+        playerOut: tired,
+        playerIn: replacement,
+        reason: 'Fresh legs for tired player',
+        impact: { attack: 0, defense: 0, freshness: +30 },
+      });
+    }
+  }
+  
+  return subs;
+}
+
+function generateUrgentAttackingSubs(
+  startingXI: Player[],
+  bench: BenchPlayer[]
+): SubstitutionRecommendation[] {
+  const subs: SubstitutionRecommendation[] = [];
+  
+  // Go all-out attack
+  const defenders = startingXI.filter(p => 
+    ['CB', 'RB', 'LB'].includes(p.assignedPosition)
+  );
+  
+  const attackers = bench.filter(b => b.role === 'attacking_option');
+  
+  // Sub out a CB for attacker
+  if (defenders.length >= 3 && attackers.length > 0) {
+    subs.push({
+      playerOut: defenders[defenders.length - 1],
+      playerIn: attackers[0],
+      reason: 'Desperate for goals - extra attacker',
+      impact: { attack: +30, defense: -25, freshness: +20 },
+    });
+  }
+  
+  // Sub DMF for AMF
+  const dmf = startingXI.find(p => p.assignedPosition === 'DMF');
+  const amf = bench.find(b => b.canCoverPositions.includes('AMF'));
+  
+  if (dmf && amf) {
+    subs.push({
+      playerOut: dmf,
+      playerIn: amf,
+      reason: 'More attacking creativity urgently needed',
+      impact: { attack: +25, defense: -20, freshness: +20 },
+    });
+  }
+  
+  return subs;
+}
+
+8. Missing Output Generation Functions
+typescriptfunction generateTacticalAnalysis(
+  formation: Formation,
+  startingXI: Player[],
+  analysis: SquadAnalysis
+): TacticalAnalysis {
+  const balance = checkTacticalBalance(startingXI, formation);
+  
+  return {
+    formationStrengths: analyzeFormationStrengths(formation, startingXI),
+    formationWeaknesses: analyzeFormationWeaknesses(formation, startingXI),
+    keyBattles: identifyKeyBattles(startingXI),
+    tacticalApproach: determineTacticalApproach(formation, startingXI, analysis),
+    setPlayStren: analyzeSetPlayStrength(startingXI),
+    expectedStyle: describeExpectedPlayingStyle(formation, startingXI),
+    ...balance,
+  };
+}
+
+function generateAlternativeFormations(
+  squad: Player[],
+  currentFormation: Formation,
+  analysis: SquadAnalysis
+): AlternativeFormation[] {
+  const alternatives = formations
+    .filter(f => f.name !== currentFormation.name)
+    .map(formation => ({
+      formation,
+      score: calculateFormationScore(formation, squad, analysis),
+      pros: generateFormationPros(formation, squad),
+      cons: generateFormationCons(formation, squad),
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3);
+  
+  return alternatives;
+}
+
+function generateKeyInsights(
+  formation: Formation,
+  startingXI: Player[],
+  analysis: SquadAnalysis,
+  tacticalAnalysis: TacticalAnalysis
+): string[] {
+  const insights: string[] = [];
+  
+  // Team identity
+  insights.push(`Team plays with a ${tacticalAnalysis.tacticalApproach} approach`);
+  
+  // Key strength
+  const topStrength = Object.entries(analysis.strengths)
+    .sort((a, b) => b[1] - a[1])[0];
+  insights.push(`Primary strength: ${topStrength[0]} (${Math.round(topStrength[1])}/100)`);
+  
+  // Star player
+  insights.push(`Star player: ${analysis.characteristics.topPlayer.name} (${analysis.characteristics.topPlayer.ovr} OVR)`);
+  
+  // Age profile
+  const avgAge = analysis.characteristics.avgAge;
+  if (avgAge < 24) {
+    insights.push('Young, developing squad with high potential');
+  } else if (avgAge > 28) {
+    insights.push('Experienced squad with tactical maturity');
+  } else {
+    insights.push('Squad in prime years with good balance');
+  }
+  
+  // Tactical issues
+  if (tacticalAnalysis.issues.length > 0) {
+    insights.push(`⚠️ Key concern: ${tacticalAnalysis.issues[0]}`);
+  }
+  
+  return insights;
+}
+```
+
+---
+
+## 📝 **KESIMPULAN & REKOMENDASI:**
+
+### ✅ **Sistem Anda SOLID untuk:**
+1. Core logic dan algorithm design
+2. Playing style compatibility system
+3. Multi-factor scoring approach
+4. Selection phase methodology
+
+### ⚠️ **Yang HARUS ditambahkan:**
+1. **Semua helper functions** yang saya list di atas
+2. **Formation definitions** dengan struktur lengkap
+3. **Complete interfaces** (Player, Formation, etc.)
+4. **3-back dan 5-back selection logic**
+5. **Missing substitution logic** (freshness, urgent)
+6. **Output generation functions** lengkap
+
+### 🎯 **Priority Implementation:**
+```
+PRIORITY 1 (CRITICAL):
+- Helper functions (normalizeOVR, getPositionType, dll)
+- Formation structure & data
+- Player interface
+- Basic selection functions
+
+PRIORITY 2 (HIGH):
+- 3-back & 5-back logic
+- Analysis functions
+- Tactical DNA identification
+
+PRIORITY 3 (MEDIUM):
+- Complete substitution scenarios
+- Output formatting functions
+- Alternative formation generation
