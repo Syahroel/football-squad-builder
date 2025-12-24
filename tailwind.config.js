@@ -9,6 +9,8 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
         pitch: {
           green: '#1a5f3f',
           line: '#ffffff',
