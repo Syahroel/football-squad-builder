@@ -139,15 +139,23 @@ export default function SquadBuilderPage() {
 
       const playersData = dataLines.map(line => {
         const parts = line.split('\t');
+        const ovr = parseInt(parts[4]?.trim());
+        const age = parseInt(parts[5]?.trim());
+        
         return {
           name: parts[1]?.trim(),
           position: parts[2]?.trim(),
           playingStyle: parts[3]?.trim(),
-          ovr: parseInt(parts[4]?.trim()),
-          age: parseInt(parts[5]?.trim()),
-          originalClub: parts[6]?.trim() || null,
+          ovr: ovr,
+          age: age,
+          originalClub: parts[6]?.trim() || '',
         };
-      }).filter(p => p.name && !isNaN(p.ovr) && !isNaN(p.age));
+      }).filter(p => p.name && p.position && !isNaN(p.ovr) && !isNaN(p.age));
+
+      if (playersData.length === 0) {
+        alert('No valid players found in file!');
+        return;
+      }
 
       let successCount = 0;
       for (const player of playersData) {
@@ -159,7 +167,7 @@ export default function SquadBuilderPage() {
           });
           if (res.ok) successCount++;
         } catch (err) {
-          console.error('Failed to import player:', player.name);
+          console.error('Failed to import player:', player.name, err);
         }
       }
 
