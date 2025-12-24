@@ -134,15 +134,22 @@ export default function SquadBuilderPage() {
     setImporting(true);
     try {
       const text = await file.text();
+      console.log('File content:', text.substring(0, 200));
+      
       const lines = text.split(/\r?\n/).filter(line => line.trim());
+      console.log('Total lines:', lines.length);
+      
       const dataLines = lines.slice(1);
+      console.log('Data lines:', dataLines.length);
 
       const playersData = dataLines.map(line => {
         const parts = line.split('\t');
+        console.log('Parts:', parts);
+        
         const ovr = parseInt(parts[4]?.trim());
         const age = parseInt(parts[5]?.trim());
         
-        return {
+        const player = {
           name: parts[1]?.trim(),
           position: parts[2]?.trim(),
           playingStyle: parts[3]?.trim(),
@@ -150,7 +157,12 @@ export default function SquadBuilderPage() {
           age: age,
           originalClub: parts[6]?.trim() || '',
         };
+        
+        console.log('Parsed player:', player);
+        return player;
       }).filter(p => p.name && p.position && !isNaN(p.ovr) && !isNaN(p.age));
+
+      console.log('Valid players:', playersData.length, playersData);
 
       if (playersData.length === 0) {
         alert('No valid players found in file!');
@@ -160,12 +172,19 @@ export default function SquadBuilderPage() {
       let successCount = 0;
       for (const player of playersData) {
         try {
+          console.log('Importing player:', player);
           const res = await fetch('/api/players', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(player),
           });
-          if (res.ok) successCount++;
+          console.log('Response status:', res.status);
+          if (res.ok) {
+            successCount++;
+          } else {
+            const errorData = await res.json();
+            console.error('Failed response:', errorData);
+          }
         } catch (err) {
           console.error('Failed to import player:', player.name, err);
         }
