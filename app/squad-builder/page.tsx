@@ -134,19 +134,37 @@ export default function SquadBuilderPage() {
     setImporting(true);
     try {
       const text = await file.text();
-      const res = await fetch('/api/players/bulk-import', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileContent: text }),
-      });
+      const lines = text.split(/\r?\n/).filter(line => line.trim());
+      const dataLines = lines.slice(1);
 
-      const data = await res.json();
-      if (res.ok) {
-        alert(`Successfully imported ${data.count} players!`);
-        await fetchPlayers();
-      } else {
-        alert(data.error || 'Failed to import players');
+      const playersData = dataLines.map(line => {
+        const parts = line.split('\t');
+        return {
+          name: parts[1]?.trim(),
+          position: parts[2]?.trim(),
+          playingStyle: parts[3]?.trim(),
+          ovr: parseInt(parts[4]?.trim()),
+          age: parseInt(parts[5]?.trim()),
+          originalClub: parts[6]?.trim() || null,
+        };
+      }).filter(p => p.name && !isNaN(p.ovr) && !isNaN(p.age));
+
+      let successCount = 0;
+      for (const player of playersData) {
+        try {
+          const res = await fetch('/api/players', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(player),
+          });
+          if (res.ok) successCount++;
+        } catch (err) {
+          console.error('Failed to import player:', player.name);
+        }
       }
+
+      alert(`Successfully imported ${successCount} of ${playersData.length} players!`);
+      await fetchPlayers();
     } catch (error) {
       console.error('Import error:', error);
       alert('Failed to import players');
