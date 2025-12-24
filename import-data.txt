@@ -1,0 +1,24 @@
+No	Nama	Posisi 	Playing Style	OVR	Umur	Asal Klub
+1	H. Gray	CF	Goal Poacher	63	17	Leeds
+2	F. Camarda	CF	Fox In The Box	71	17	Lecce
+3	D. N.Guessan	CF	Creative Playmaker	65	17	Toulouse
+4	M. Moore	LWF	Prolific Winger	72	18	Rangers
+5	W. Mike	LWF	Prolific Winger	69	17	Bayern Munchen
+6	Lamine Yamal	RWF	Prolific Winger	87	18	FC Barcelona
+7	I. Mbaye	RWF	Prolific Winger	75	17	PSG
+8	L. Karl	AMF	Hole Player	72	17	Bayern Munchen
+9	D. Mukasa	AMF	Hole Player	68	17	M. City
+10	C. Sullivan	AMF	Box-to-Box	68	16	Philadhelpia Union
+11	J. Mokio	DMF	Anchor Man	72	17	Ajax
+12	M. Palma	DMF	Destroyer	66	17	Udinese
+13	Marc Bernal	DMF	Orchestrator	73	18	FC Barcelona
+14	L. Vuskovic	CB	Build Up	75	18	HSV Hamburg
+15	F. Nardin	CB	Destroyer	60	18	As Roma
+16	S. Mfuni	CB	Destroyer	71	17	M. City
+17	Pau Cubarsi	CB	Extra Frontman	80	18	FC Barcelona
+18	Buba Sangare	RB	Offensive Fullback	67	18	As Roma
+19	M. Hardy	RB	Deffensive Fullback	63	17	Tottenham Hotspur
+20	D. Leon	LB	Offensive Fullback	72	18	M. United
+21	Jorge Salinas	LB	Deffensive Fullback	67	18	Racing - La Liga 2
+22	J. Porter	GK	Offensive Goalkeeper	70	17	Arsenal
+23	A. Nunziante	GK	Offensive Goalkeeper	73	18	Udinese

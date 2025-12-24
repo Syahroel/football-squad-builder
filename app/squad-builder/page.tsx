@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RecommendationResult } from '@/lib/recommendations';
-import { Plus, Search, Sparkles } from 'lucide-react';
+import { Plus, Search, Sparkles, Upload } from 'lucide-react';
 
 export default function SquadBuilderPage() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -21,6 +21,7 @@ export default function SquadBuilderPage() {
   const [positionFilter, setPositionFilter] = useState('');
   const [recommendations, setRecommendations] = useState<RecommendationResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   useEffect(() => {
     fetchPlayers();
@@ -126,6 +127,35 @@ export default function SquadBuilderPage() {
     }
   };
 
+  const handleBulkImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImporting(true);
+    try {
+      const text = await file.text();
+      const res = await fetch('/api/players/bulk-import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileContent: text }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        alert(`Successfully imported ${data.count} players!`);
+        await fetchPlayers();
+      } else {
+        alert(data.error || 'Failed to import players');
+      }
+    } catch (error) {
+      console.error('Import error:', error);
+      alert('Failed to import players');
+    } finally {
+      setImporting(false);
+      e.target.value = '';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="border-b bg-white sticky top-0 z-50 shadow-sm">
@@ -164,10 +194,27 @@ export default function SquadBuilderPage() {
                 <CardHeader>
                   <div className="flex justify-between items-center">
                     <CardTitle>Your Squad ({players.length} players)</CardTitle>
-                    <Button onClick={() => setShowForm(true)}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Player
-                    </Button>
+                    <div className="flex gap-2">
+                      <label htmlFor="bulk-import">
+                        <Button variant="outline" disabled={importing} asChild>
+                          <span className="cursor-pointer">
+                            <Upload className="w-4 h-4 mr-2" />
+                            {importing ? 'Importing...' : 'Import TXT'}
+                          </span>
+                        </Button>
+                      </label>
+                      <input
+                        id="bulk-import"
+                        type="file"
+                        accept=".txt"
+                        onChange={handleBulkImport}
+                        className="hidden"
+                      />
+                      <Button onClick={() => setShowForm(true)}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Player
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
