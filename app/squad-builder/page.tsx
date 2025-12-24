@@ -195,14 +195,10 @@ export default function SquadBuilderPage() {
                   <div className="flex justify-between items-center">
                     <CardTitle>Your Squad ({players.length} players)</CardTitle>
                     <div className="flex gap-2">
-                      <label htmlFor="bulk-import">
-                        <Button variant="outline" disabled={importing} asChild>
-                          <span className="cursor-pointer">
-                            <Upload className="w-4 h-4 mr-2" />
-                            {importing ? 'Importing...' : 'Import TXT'}
-                          </span>
-                        </Button>
-                      </label>
+                      <Button variant="outline" disabled={importing} onClick={() => document.getElementById('bulk-import')?.click()}>
+                        <Upload className="w-4 h-4 mr-2" />
+                        {importing ? 'Importing...' : 'Import TXT'}
+                      </Button>
                       <input
                         id="bulk-import"
                         type="file"
