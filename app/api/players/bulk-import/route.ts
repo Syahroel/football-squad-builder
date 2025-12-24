@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/db';
-import { players } from '@/db/schema';
-import { sql } from 'drizzle-orm';
+import { createClient } from '@libsql/client';
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,11 +33,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No valid players found in file' }, { status: 400 });
     }
 
+    const client = createClient({
+      url: process.env.TURSO_DATABASE_URL!,
+      authToken: process.env.TURSO_AUTH_TOKEN,
+    });
+
     for (const player of playersData) {
-      await db.run(sql`
-        INSERT INTO players (id, name, ovr, age, position, playing_style, original_club, created_at, updated_at, user_id)
-        VALUES (${player.id}, ${player.name}, ${player.ovr}, ${player.age}, ${player.position}, ${player.playingStyle}, ${player.originalClub}, ${player.createdAt}, ${player.updatedAt}, ${player.userId})
-      `);
+      await client.execute({
+        sql: 'INSERT INTO players (id, name, ovr, age, position, playing_style, original_club, created_at, updated_at, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        args: [player.id, player.name, player.ovr, player.age, player.position, player.playingStyle, player.originalClub, player.createdAt, player.updatedAt, player.userId]
+      });
     }
     
     return NextResponse.json({ 
