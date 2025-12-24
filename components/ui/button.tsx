@@ -3,10 +3,11 @@ import { cn } from "@/lib/utils"
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link'
+  size?: 'default' | 'sm' | 'lg'
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = 'default', ...props }, ref) => {
+  ({ className, variant = 'default', size = 'default', ...props }, ref) => {
     const variants = {
       default: 'bg-blue-600 text-white hover:bg-blue-700',
       destructive: 'bg-red-600 text-white hover:bg-red-700',
@@ -16,11 +17,18 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       link: 'text-blue-600 underline-offset-4 hover:underline',
     }
     
+    const sizes = {
+      default: 'px-4 py-2 text-sm',
+      sm: 'px-3 py-1 text-xs',
+      lg: 'px-6 py-3 text-base',
+    }
+    
     return (
       <button
         className={cn(
-          'inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50',
+          'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50',
           variants[variant],
+          sizes[size],
           className
         )}
         ref={ref}
